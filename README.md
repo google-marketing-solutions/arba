@@ -15,7 +15,7 @@ Looker Studio dashboard with recommendations on improving performance of search 
 ### Installation
 
 ```
-pip install google-ads-api-report-fetcher[bq]
+pip install -r requirements.txt
 ```
 
 ### Usage
