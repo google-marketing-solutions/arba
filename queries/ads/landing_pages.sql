@@ -12,23 +12,17 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- Extracts mapping between ad_group_id and its upward hierarchy.
+-- Extracts mapping between ad_group_id and landing pages.
 
--- @param start_date First date of the period for ad_group performance.
--- @param end_date Last date of the period for ad_group performance.
+-- @param start_date First date of the period for landing page performance.
+-- @param end_date Last date of the period for landing page performance.
 
 SELECT
-  customer.id AS account_id,
-  customer.descriptive_name AS account_name,
-  customer.currency_code AS currency_code,
   campaign.advertising_channel_type AS campaign_type,
-  campaign.advertising_channel_sub_type AS campaign_subtype,
-  campaign.bidding_strategy_type AS bidding_strategy,
-  campaign.id AS campaign_id,
-  campaign.name AS campaign_name,
   ad_group.id AS ad_group_id,
-  ad_group.name AS ad_group_name
-FROM ad_group
+  ad_group_ad.ad.id AS ad_id,
+  ad_group_ad.ad.final_urls AS final_urls
+FROM ad_group_ad
 WHERE
   campaign.advertising_channel_type = SEARCH
   AND segments.date BETWEEN '{start_date}' AND '{end_date}'
