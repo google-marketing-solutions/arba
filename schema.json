@@ -1,0 +1,8 @@
+{
+	"type": "OBJECT",
+	"properties":  {
+		"main_theme": {
+			"type": "STRING"
+		}
+	}
+}

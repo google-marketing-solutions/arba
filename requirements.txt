@@ -14,9 +14,9 @@ cachetools==6.2.0 \
     --hash=sha256:1c76a8960c0041fcc21097e357f882197c79da0dbff766e7317890a65d7d8ba6 \
     --hash=sha256:38b328c0889450f05f5e120f56ab68c8abaf424e1275522b138ffc93253f7e32
     # via google-auth
-certifi==2025.8.3 \
-    --hash=sha256:e564105f78ded564e3ae7c923924435e1daa7463faeab5bb932bc53ffae63407 \
-    --hash=sha256:f6c12493cfb1b06ba2ff328595af9350c65d6644968e5d3a2ffd78699af217a5
+certifi==2025.10.5 \
+    --hash=sha256:0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de \
+    --hash=sha256:47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43
     # via
     #   httpcore
     #   httpx
@@ -117,10 +117,12 @@ garf-core==0.2.2 \
     #   garf-executors
     #   garf-io
     #   google-ads-api-report-fetcher
-garf-executors==0.0.9 \
+garf-executors[bq]==0.0.9 \
     --hash=sha256:63e31dea6af2e382544e12c606dbff0d81438d724c21caa16008b3063fb240aa \
     --hash=sha256:f86d51d2d229ba2b2e714e93228a0910a8607bb0e84d83d0cd450734b3a91975
-    # via media-tagging
+    # via
+    #   -r requirements.in
+    #   media-tagging
 garf-io[bq]==0.0.12 \
     --hash=sha256:190a3d877dc45f347fc8b6a43071c113caac7702dbce36ee51b6d2b310d87685 \
     --hash=sha256:8d4f2a37d322e980fadb9c7322f629c5ee986d2cbe46e39b0334c5b7b3ac1408
@@ -135,9 +137,9 @@ google-ads-api-report-fetcher[bq]==1.17.0 \
     --hash=sha256:95c9f5b9b70dcb803747ca1e0d9104e19e4d152bb21ce2361553bf2a3c805cdf \
     --hash=sha256:f654e72a2f22a7623565fb95746280d967666a1e0f69f6153a4409ef36bbf89e
     # via -r requirements.in
-google-api-core[grpc]==2.25.1 \
-    --hash=sha256:8a2a56c1fef82987a524371f99f3bd0143702fecc670c72e600c1cda6bf8dbb7 \
-    --hash=sha256:d2aaa0b13c78c61cb3f4282c464c046e45fbd75755683c9c525e6e8f7ed0a5e8
+google-api-core[grpc]==2.25.2 \
+    --hash=sha256:1c63aa6af0d0d5e37966f157a77f9396d820fba59f9e43e9415bc3dc5baff300 \
+    --hash=sha256:e9a8f62d363dc8424a8497f4c2a47d6bcda6c16514c935629c257ab5d10210e7
     # via
     #   google-ads
     #   google-cloud-bigquery
@@ -217,9 +219,9 @@ google-crc32c==1.7.1 \
     # via
     #   google-cloud-storage
     #   google-resumable-media
-google-genai==1.39.1 \
-    --hash=sha256:4721704b43d170fc3f1b1cb5494bee1a7f7aae20de3a5383cdf6a129139df80b \
-    --hash=sha256:6ca36c7e40db6fcba7049dfdd102c86da326804f34403bd7d90fa613a45e5a78
+google-genai==1.41.0 \
+    --hash=sha256:111a3ee64c1a0927d3879faddb368234594432479a40c311e5fe4db338ca8778 \
+    --hash=sha256:134f861bb0ace4e34af0501ecb75ceee15f7662fd8120698cd185e8cb39f2800
     # via media-tagging
 google-resumable-media==2.7.2 \
     --hash=sha256:3ce7551e9fe6d99e9a126101d2536612bb73486721951e9562fee0f90c6ababa \
@@ -716,6 +718,7 @@ pandas==2.3.3 \
     --hash=sha256:f8bfc0e12dc78f777f323f55c58649591b2cd0c43534e8355c51d3fede5f4dee
     # via
     #   db-dtypes
+    #   garf-executors
     #   garf-io
     #   google-ads-api-report-fetcher
     #   media-tagging
@@ -911,9 +914,9 @@ pyasn1-modules==0.4.2 \
     --hash=sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a \
     --hash=sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6
     # via google-auth
-pydantic==2.11.9 \
-    --hash=sha256:6b8ffda597a14812a7975c90b82a8a2e777d9257aba3453f973acd3c032a18e2 \
-    --hash=sha256:c42dd626f5cfc1c6950ce6205ea58c93efa406da65f479dcb4029d5934857da2
+pydantic==2.11.10 \
+    --hash=sha256:802a655709d49bd004c31e865ef37da30b540786a46bfce02333e0e24b5fe29a \
+    --hash=sha256:dc280f0982fbda6c38fada4e476dc0a4f3aeaf9c6ad4c28df68a666ec3c61423
     # via
     #   garf-core
     #   garf-executors

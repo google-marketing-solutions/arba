@@ -1,5 +1,10 @@
 # Arba - AdRank Booster
 
+Ad Rank Booster helps win the search auction thanks to quality score improvement
+opposed to bidding levers.
+Improving such components as landing page experience, ad relevance and expected
+CTR significantly uplifts their performance and serves a foundation to grow search investment.
+
 ## Deliverable
 
 Looker Studio dashboard with recommendations on improving performance of search campaigns.
