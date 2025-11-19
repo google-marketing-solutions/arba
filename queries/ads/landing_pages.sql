@@ -19,6 +19,7 @@
 
 SELECT
   campaign.advertising_channel_type AS campaign_type,
+  campaign.id AS campaign_id,
   ad_group.id AS ad_group_id,
   ad_group_ad.ad.id AS ad_id,
   ad_group_ad.ad.final_urls AS final_urls

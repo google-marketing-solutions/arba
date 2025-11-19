@@ -19,6 +19,7 @@
 
 SELECT
   customer.id AS account_id,
+  campaign.id AS campaign_id,
   ad_group_criterion.keyword.text AS keyword,
   ad_group_criterion.keyword.match_type AS match_type,
   keyword_view.resource_name~1 AS keyword_id

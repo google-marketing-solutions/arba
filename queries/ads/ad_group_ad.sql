@@ -26,6 +26,8 @@ SELECT
   ad_group.name AS ad_group_name,
   ad_group_ad.ad.id AS ad_group_ad_id,
   ad_group_ad.ad_strength AS ad_group_ad_strength,
+  ad_group_ad.ad.responsive_search_ad.headlines AS headlines,
+  ad_group_ad.ad.responsive_search_ad.descriptions AS descriptions,
   metrics.cost_micros / 1e6 AS cost
 FROM ad_group_ad
 WHERE
