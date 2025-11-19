@@ -24,10 +24,18 @@ SELECT
   campaign.advertising_channel_type AS campaign_type,
   campaign.advertising_channel_sub_type AS campaign_subtype,
   campaign.bidding_strategy_type AS bidding_strategy,
+  campaign.maximize_conversions.target_cpa_micros AS maximize_conversions_target_cpa,
+  campaign.target_cpa.target_cpa_micros / 1e6 AS target_cpa,
+  campaign.target_roas.target_roas AS target_roas,
+  campaign.maximize_conversion_value.target_roas AS maximize_conversions_target_roas,
   campaign.id AS campaign_id,
   campaign.name AS campaign_name,
   ad_group.id AS ad_group_id,
-  ad_group.name AS ad_group_name
+  ad_group.name AS ad_group_name,
+  metrics.cost_micros / 1e6 AS cost,
+  metrics.conversions AS conversions,
+  metrics.conversions_value AS conversions_value,
+  metrics.bounce_rate AS bounce_rate
 FROM ad_group
 WHERE
   campaign.advertising_channel_type = SEARCH
