@@ -17,7 +17,7 @@
 -- @param target_dataset BigQuery dataset to store view.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE VIEW `{target_dataset}.keyword_performance_view` AS
+CREATE OR REPLACE TABLE `{target_dataset}.keyword_performance_view` AS
 SELECT
   A.account_id,
   A.account_name,

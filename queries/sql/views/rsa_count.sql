@@ -17,9 +17,28 @@
 -- @param target_dataset BigQuery dataset to store view.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.landing_page_view` AS
-SELECT
-  campaign_id,
-  REGEXP_REPLACE(SPLIT(url, '?')[0], '{.*?}', '') AS url,
-  speed_score,
-FROM `{dataset}.speed_score`;
+CREATE OR REPLACE TABLE `{target_dataset}.rsa_count` AS (
+  WITH AdGroupAd AS (
+    SELECT
+      account_id,
+      account_name,
+      campaign_id,
+      campaign_name,
+      ad_group_id,
+      ad_group_name,
+      COUNT(DISTINCT ad_group_ad_id) AS rsa_count,
+      ROUND(SUM(cost),0) AS cost
+    FROM `{target_dataset}.ad_group_ad`
+    GROUP BY ALL
+  )
+  SELECT
+    account_id,
+    account_name,
+    campaign_id,
+    campaign_name,
+    ad_group_id,
+    ad_group_name,
+    cost,
+    IF(rsa_count = 1,FALSE,TRUE) AS has_more_than_one_rsa,
+  FROM AdGroupAd
+);
