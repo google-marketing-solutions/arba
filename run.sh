@@ -12,53 +12,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+usage() {
+    echo "Usage: $0 -d <dataset> -p <project> -a <ads-config> -s <start_date> -e <end_date> -c <account>"
+    exit 1
+}
+
+while getopts "d:p:a:s:e:m:c:" opt; do
+    case $opt in
+        d) BQ_DATASET="$OPTARG" ;;
+        p) GOOGLE_CLOUD_PROJECT="$OPTARG" ;;
+        a) ADS_CONFIG="$OPTARG" ;;
+        s) START_DATE="$OPTARG" ;;
+        e) END_DATE="$OPTARG" ;;
+        c) GOOGLE_ADS_ACCOUNT="$OPTARG" ;;
+        \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
+        :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
+    esac
+done
+
+if [ -z "$GOOGLE_ADS_ACCOUNT" ]; then
+    echo "Provide Google Ads account."
+    exit 1
+fi
+
+if [ -z "$ADS_CONFIG" ]; then
+  echo "google-ads.yaml not provided. Using default ~/google-ads.yaml"
+  GOOGLE_ADS_CONFIG=$HOME/google-ads.yaml
+fi
+
+if [ -z "$BQ_DATASET" ]; then
+  BQ_DATASET='arba'
+fi
+
+if [ -z "$START_DATE" ]; then
+  START_DATE=:YYYYMMDD-30
+fi
+
+if [ -z "$END_DATE" ]; then
+  END_DATE=:YYYYMMDD-1
+fi
+
 fetch_ads_data() {
-  gaarf queries/ads/landing_pages.sql \
+  gaarf queries/ads/*.sql \
     --account $GOOGLE_ADS_ACCOUNT \
-    --ads-config $GOOGLE_ADS_CONFIGURATION_FILE_PATH \
+    --ads-config $ADS_CONFIG \
     --customer-id-query 'SELECT customer.id FROM campaign WHERE campaign.advertising_channel_type = SEARCH' \
-    --macro.start-date=:YYYYMMDD-30 \
-    --macro.end-date=:YYYYMMDD-1 \
+    --macro.start-date=$START_DATE \
+    --macro.end-date=$END_DATE \
     --output bq \
     --bq.project=$GOOGLE_CLOUD_PROJECT \
-    --bq.dataset=arba
+    --bq.dataset=$BQ_DATASET
 }
 
-get_landings() {
-  garf queries/sql/inputs/landings.sql \
-    --source bq \
-    --source.project-id=$GOOGLE_CLOUD_PROJECT \
-    --macro.dataset=arba \
-    --output csv \
-    --csv.destination-folder=/tmp
-
-}
 tag_landing_pages() {
-  get_landings
-  local prompt="Summarize the key information from the provided URL. Focus on the main purpose and key takeaways, plus as well as focusing on meta tags content, especially meta tag 'description' "
-  media-tagger describe --input /tmp/landings.csv \
-    --input.column_name=final_urls --input.skip-row=1 \
-    --media-type WEBPAGE \
-    --tagger gemini \
-    --tagger.model-name=gemini-2.5-flash \
-    --tagger.custom-prompt="$prompt" \
-    --tagger.custom-schema=./schema.json \
-    --writer bq \
-    --output landing_info \
-    --bq.project=$GOOGLE_CLOUD_PROJECT \
-    --bq.array-handling=strings \
-    --bq.dataset=arba
+  cd scripts
+  python landings_score.py --dataset=$BQ_DATASET
+  cd ..
 }
 
 
 generate_bq_views() {
-  garf queries/sql/views/*.sql \
+  garf queries/sql/$1/*.sql \
     --source bq \
     --source.project-id=$GOOGLE_CLOUD_PROJECT \
-    --macro.target_dataset=arba_output \
-    --macro.dataset=arba
+    --macro.target_dataset=$BQ_DATASET \
+    --macro.dataset=$BQ_DATASET
 }
 
 fetch_ads_data
 tag_landing_pages
-generate_bq_views
+for step in 01 02 03; do
+  echo "Run step $step"
+  generate_bq_views $step
+done
