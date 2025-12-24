@@ -22,7 +22,8 @@ SELECT
   campaign.id AS campaign_id,
   ad_group.id AS ad_group_id,
   ad_group_ad.ad.id AS ad_id,
-  ad_group_ad.ad.final_urls AS final_urls
+  ad_group_ad.ad.final_urls AS final_urls,
+  metrics.cost_micros / 1e6 AS cost,
 FROM ad_group_ad
 WHERE
   campaign.advertising_channel_type = SEARCH

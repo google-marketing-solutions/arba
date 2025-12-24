@@ -20,7 +20,7 @@
 SELECT
   segments.date AS date,
   ad_group.id AS ad_group_id,
-  keyword_view.resource_name~1 AS keyword_id,
+  ad_group_criterion.criterion_id AS keyword_id,
   metrics.cost_micros / 1e6 AS cost,
   metrics.impressions AS impressions,
   metrics.clicks AS clicks,

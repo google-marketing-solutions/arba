@@ -22,7 +22,7 @@ SELECT
   campaign.id AS campaign_id,
   ad_group_criterion.keyword.text AS keyword,
   ad_group_criterion.keyword.match_type AS match_type,
-  keyword_view.resource_name~1 AS keyword_id
+  ad_group_criterion.criterion_id AS keyword_id
 FROM  keyword_view
 WHERE
   ad_group_criterion.negative = FALSE
