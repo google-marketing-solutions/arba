@@ -19,6 +19,7 @@
 import os
 
 import garf_core
+import typer
 from garf_executors.bq_executor import BigQueryExecutor
 from garf_executors.entrypoints import utils as garf_utils
 from garf_io import reader, writer
@@ -26,8 +27,10 @@ from media_tagging import MediaTaggingRequest, MediaTaggingService, repositories
 from media_tagging.taggers.llm.gemini.tagging_strategies import (
   _parse_json as parse_json,
 )
+from typing_extensions import Annotated
 
 logger = garf_utils.init_logging(name='landings')
+app = typer.Typer()
 
 PROMPT_TEMPLATE = """
 Given the following keywords and ads give me score of how the landing page
@@ -88,7 +91,8 @@ def build_prompt(landing_url: str, ads: list[str], keywords: list[str]) -> str:
   )
 
 
-def main():
+@app.command()
+def main(dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba'):
   tagging_service = MediaTaggingService(
     repositories.SqlAlchemyTaggingResultsRepository(
       db_url=os.getenv('ARBA_DB_URI')
@@ -97,7 +101,7 @@ def main():
 
   bq_executor = BigQueryExecutor()
   query = reader.FileReader().read(query_path='./landings.sql')
-  query = query.format(dataset='arba')
+  query = query.format(dataset=dataset)
   landings = bq_executor.execute(
     query=query,
     title='landings',
@@ -105,7 +109,7 @@ def main():
 
   data = []
   max_processed = 50
-  bq_writer = writer.create_writer('bq', dataset='arba')
+  bq_writer = writer.create_writer('bq', dataset=dataset)
   for landing, items in landings.to_dict('url').items():
     for campaign in items:
       if max_processed < 0:
@@ -134,4 +138,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  app()
