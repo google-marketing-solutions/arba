@@ -27,10 +27,11 @@ CREATE OR REPLACE TABLE `{target_dataset}.summary_impression_grow` AS (
       date,
       SUM(KP.cost) AS daily_cost,
       AVG(search_impression_share) AS impression_share
-    FROM `{target_dataset}.keyword_performance` KP
-    LEFT JOIN `{target_dataset}.ad_group_mapping` AGM USING(ad_group_id)
+    FROM `{dataset}.keyword_performance` AS KP
+    LEFT JOIN `{dataset}.ad_group_mapping` AS AGM USING (ad_group_id)
     GROUP BY ALL
-  ), RollingCalculation AS (
+  ),
+  RollingCalculation AS (
     SELECT
       account_id,
       account_name,

@@ -17,23 +17,25 @@
 -- @param target_dataset BigQuery dataset to store table.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.imp_share` AS (
+CREATE OR REPLACE TABLE `{target_dataset}.ar_view` AS (
   SELECT
-    account_id,
-    account_name,
-    campaign_id,
-    campaign_name,
-    ad_group_id,
-    ad_group_name,
-    keyword,
-    SUM(cost) AS costs,
-    MAX(search_impression_share) AS impression_share,
-    "Monitor and focus on optimization" AS recommended_action
-  FROM
-    `{target_dataset}.keyword_performance_view`
-  WHERE
-    date > CAST(CURRENT_DATE()-8 AS STRING)
-    AND date < CAST(CURRENT_DATE() AS STRING)
+    KPV.date,
+    KPV.account_id,
+    KPV.account_name,
+    KPV.campaign_id,
+    KPV.campaign_name,
+    KPV.ad_group_id,
+    KPV.ad_group_name,
+    CASE
+      WHEN KPV.ad_relevance = "UNSPECIFIED" THEN 0
+      WHEN KPV.ad_relevance = "BELOW_AVERAGE" THEN 1
+      WHEN KPV.ad_relevance = "AVERAGE" THEN 2
+      WHEN KPV.ad_relevance = "ABOVE_AVERAGE" THEN 3
+    END AS ar,
+    ROUND(SUM(KPV.cost)) AS costs,
+    DailyCosts.daily_costs AS daily_costs
+  FROM `{target_dataset}.keyword_performance_view` AS KPV
+  INNER JOIN `{target_dataset}.daily_costs` AS DailyCosts
+    USING(date, account_id, campaign_id, ad_group_id)
   GROUP BY ALL
-  HAVING impression_share < 0.1
 );

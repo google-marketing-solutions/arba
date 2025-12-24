@@ -17,7 +17,29 @@
 -- @param target_dataset BigQuery dataset to store table.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.imp_share_lost_due_rank` AS (
+CREATE OR REPLACE TABLE `{target_dataset}.hagakure_adgroups` AS (
+  WITH KeywordRanks AS (
+    SELECT
+      ad_group_id,
+      keyword,
+      SUM(impressions) AS impressions,
+      ROW_NUMBER() OVER (PARTITION BY ad_group_id ORDER BY SUM(impressions) DESC) AS rn
+    FROM
+      `{target_dataset}.keyword_performance_view`
+    WHERE
+      date > CAST(CURRENT_DATE()-8 AS STRING)
+      AND date < CAST(CURRENT_DATE() AS STRING)
+    GROUP BY ALL
+  ),
+  TopKeywords AS (
+    SELECT
+      ad_group_id,
+      STRING_AGG(keyword, ', ' ORDER BY impressions DESC) AS top_10_keywords
+    FROM KeywordRanks
+    WHERE
+      rn <= 10
+    GROUP BY 1
+  )
   SELECT
     account_id,
     account_name,
@@ -25,15 +47,12 @@ CREATE OR REPLACE TABLE `{target_dataset}.imp_share_lost_due_rank` AS (
     campaign_name,
     ad_group_id,
     ad_group_name,
-    keyword,
-    SUM(cost) AS costs,
-    MAX(search_rank_lost_impression_share) AS lost_due_rank,
-    "Action / Attention required on Ad Rank" AS recommended_action
-  FROM
-    `{target_dataset}.keyword_performance_view`
+    top_10_keywords,
+    SUM(impressions) AS impressions
+  FROM `{target_dataset}.keyword_performance_view`
+  LEFT JOIN TopKeywords USING(ad_group_id)
   WHERE
     date > CAST(CURRENT_DATE()-8 AS STRING)
     AND date < CAST(CURRENT_DATE() AS STRING)
   GROUP BY ALL
-  HAVING lost_due_rank > 0.3
 );

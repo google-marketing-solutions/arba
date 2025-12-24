@@ -17,23 +17,28 @@
 -- @param target_dataset BigQuery dataset to store view.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.keyword_performance_view` AS
-SELECT
-  A.account_id,
-  A.account_name,
-  A.currency_code,
-  A.campaign_type,
-  A.campaign_subtype,
-  A.bidding_strategy,
-  A.campaign_id,
-  A.campaign_name,
-  A.ad_group_name,
-  K.keyword,
-  K.match_type,
-  P.*
-FROM `{dataset}.keyword_performance` AS P
-INNER JOIN `{dataset}.ad_group_mapping` AS A
-  ON P.ad_group_id= A.ad_group_id
-INNER JOIN `{dataset}.keyword_mapping` AS K
-  ON P.keyword_id = K.keyword_id
-    AND A.account_id= K.account_id;
+CREATE OR REPLACE TABLE `{target_dataset}.rsa_count` AS (
+  WITH AdGroupAd AS (
+    SELECT
+      account_id,
+      account_name,
+      campaign_id,
+      campaign_name,
+      ad_group_id,
+      ad_group_name,
+      COUNT(DISTINCT ad_group_ad_id) AS rsa_count,
+      ROUND(SUM(cost), 0) AS cost
+    FROM `{dataset}.ad_group_ad`
+    GROUP BY ALL
+  )
+  SELECT
+    account_id,
+    account_name,
+    campaign_id,
+    campaign_name,
+    ad_group_id,
+    ad_group_name,
+    cost,
+    rsa_count = 1 AS has_more_than_one_rsa,
+  FROM AdGroupAd
+);

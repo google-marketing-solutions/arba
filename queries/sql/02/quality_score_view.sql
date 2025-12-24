@@ -18,28 +18,19 @@
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
 CREATE OR REPLACE TABLE `{target_dataset}.quality_score_view` AS (
-  WITH KeywordPerformanceView AS (
-    SELECT DISTINCT *
-    FROM `{target_dataset}.keyword_performance_view`
-  )
   SELECT
-    FORMAT_DATE('%F',PARSE_DATE('%Y-%m-%d',CAST(KV.date AS STRING))) AS date,
-    KV.account_id,
-    KV.account_name,
-    KV.campaign_id,
-    KV.campaign_name,
-    KV.ad_group_id,
-    KV.ad_group_name,
-    CAST(COALESCE(KV.historical_quality_score,0) AS INT64) AS qs,
-    ROUND(SUM(KV.cost)) AS costs,
+    KPV.date,
+    KPV.account_id,
+    KPV.account_name,
+    KPV.campaign_id,
+    KPV.campaign_name,
+    KPV.ad_group_id,
+    KPV.ad_group_name,
+    CAST(COALESCE(KPV.quality_score,0) AS INT64) AS qs,
+    ROUND(SUM(KPV.cost)) AS costs,
     DailyCosts.daily_costs AS daily_costs
-  FROM KeywordPerformanceView AS KV
+  FROM `{target_dataset}.keyword_performance_view` AS KPV
   INNER JOIN `{target_dataset}.daily_costs` AS DailyCosts
-    ON FORMAT_DATE('%F',PARSE_DATE('%Y-%m-%d',
-        CAST(KV.date AS STRING)
-    )) = DailyCosts.date
-    AND KV.account_id = DailyCosts.account_id
-    AND KV.campaign_id = DailyCosts.campaign_id
-    AND KV.ad_group_id = DailyCosts.ad_group_id
+    USING(date, account_id, campaign_id, ad_group_id)
   GROUP BY ALL
 );

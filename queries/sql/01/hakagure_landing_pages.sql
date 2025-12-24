@@ -26,28 +26,20 @@ CREATE OR REPLACE TABLE `{target_dataset}.hagakure_landing_pages` AS (
       AGM.campaign_name,
       LP.ad_group_id,
       AGM.ad_group_name,
-      LP.final_urls
-    FROM `{target_dataset}.landing_pages` LP
-    INNER JOIN `{target_dataset}.ad_group_mapping` AGM
+      LP.final_urls,
+      LP.cost
+    FROM `{dataset}.landing_pages` AS LP
+    INNER JOIN `{dataset}.ad_group_mapping` AS AGM
       ON LP.ad_group_id = AGM.ad_group_id
   )
   SELECT
     account_id,
     account_name,
     final_urls AS landing_page,
-    ARRAY_TO_STRING(
-      ARRAY_AGG(
-        DISTINCT CAST(ad_group_id AS STRING)
-      ),"\n") AS ad_groups,
-    ARRAY_TO_STRING(
-      ARRAY_AGG(
-        DISTINCT CAST(ad_group_name AS STRING)
-      ),"\n") AS ad_groups_names,
-    IF(
-      ARRAY_LENGTH(ARRAY_AGG(DISTINCT ad_group_id)) > 1,
-      TRUE,
-      FALSE
-    ) AS requiring_attention
+    STRING_AGG(DISTINCT CAST(ad_group_id AS STRING),"\n") AS ad_groups,
+    STRING_AGG(DISTINCT CAST(ad_group_name AS STRING),"\n") AS ad_groups_names,
+    COUNT(DISTINCT ad_group_id) > 1 AS requiring_attention,
+    SUM(cost) AS cost
   FROM AdGroupData
   GROUP BY ALL
 );

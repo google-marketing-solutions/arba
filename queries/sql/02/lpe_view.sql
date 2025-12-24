@@ -17,16 +17,25 @@
 -- @param target_dataset BigQuery dataset to store table.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.hagakure_campaigns` AS (
+CREATE OR REPLACE TABLE `{target_dataset}.lpe_view` AS (
   SELECT
-    account_id,
-    account_name,
-    campaign_id,
-    campaign_name,
-    ROUND(SUM(conversions),0) AS conversions
-  FROM `{target_dataset}.keyword_performance_view`
-  WHERE
-    date > CAST(CURRENT_DATE()-31 AS STRING)
-    AND date < CAST(CURRENT_DATE() AS STRING)
+    KPV.date,
+    KPV.account_id,
+    KPV.account_name,
+    KPV.campaign_id,
+    KPV.campaign_name,
+    KPV.ad_group_id,
+    KPV.ad_group_name,
+    CASE
+      WHEN KPV.landing_page_experience = "UNSPECIFIED" THEN 0
+      WHEN KPV.landing_page_experience = "BELOW_AVERAGE" THEN 1
+      WHEN KPV.landing_page_experience = "AVERAGE" THEN 2
+      WHEN KPV.landing_page_experience = "ABOVE_AVERAGE" THEN 3
+    END AS lpe,
+    ROUND(SUM(KPV.cost)) AS costs,
+    DailyCosts.daily_costs AS daily_costs
+  FROM `{target_dataset}.keyword_performance_view` AS KPV
+  INNER JOIN `{target_dataset}.daily_costs` AS DailyCosts
+    USING(date, account_id, campaign_id, ad_group_id)
   GROUP BY ALL
 );

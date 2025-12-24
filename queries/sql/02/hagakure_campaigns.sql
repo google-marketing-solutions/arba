@@ -17,10 +17,16 @@
 -- @param target_dataset BigQuery dataset to store table.
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
-CREATE OR REPLACE TABLE `{target_dataset}.imp_share_recommendations` AS (
-  SELECT * EXCEPT(impression_share) FROM `{target_dataset}.imp_share`
-  UNION DISTINCT BY NAME
-  SELECT * EXCEPT(lost_due_budget) FROM `{target_dataset}.imp_share_lost_due_budget`
-  UNION DISTINCT BY NAME
-  SELECT * EXCEPT(lost_due_rank) FROM `{target_dataset}.imp_share_lost_due_rank`
+CREATE OR REPLACE TABLE `{target_dataset}.hagakure_campaigns` AS (
+  SELECT
+    account_id,
+    account_name,
+    campaign_id,
+    campaign_name,
+    ROUND(SUM(conversions), 0) AS conversions
+  FROM `{target_dataset}.keyword_performance_view`
+  WHERE
+    date > CAST(CURRENT_DATE()-31 AS STRING)
+    AND date < CAST(CURRENT_DATE() AS STRING)
+  GROUP BY ALL
 );

@@ -36,11 +36,12 @@ CREATE OR REPLACE TABLE `{target_dataset}.rsa_to_remove` AS (
         ELSE 0
       END AS ad_strength_mapped,
       AGA.cost
-    FROM `{target_dataset}.ad_group_ad` AGA
-    INNER JOIN `{target_dataset}.rsa_count` AGRA
-      ON AGA.ad_group_id = AGRA.ad_group_id
-    WHERE has_more_than_one_rsa = TRUE
-  ), AdGroupAdStrengthRanked AS (
+    FROM `{dataset}.ad_group_ad` AS AGA
+    INNER JOIN `{target_dataset}.rsa_count` AS RC
+      ON AGA.ad_group_id = RC.ad_group_id
+    WHERE RC.has_more_than_one_rsa = TRUE
+  ),
+  AdGroupAdStrengthRanked AS (
     SELECT
       *,
       DENSE_RANK() OVER (
