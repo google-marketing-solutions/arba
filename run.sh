@@ -17,7 +17,7 @@ usage() {
     exit 1
 }
 
-while getopts "d:p:a:s:e:m:c:" opt; do
+while getopts "d:p:a:s:e:m:c:t:" opt; do
     case $opt in
         d) BQ_DATASET="$OPTARG" ;;
         p) GOOGLE_CLOUD_PROJECT="$OPTARG" ;;
@@ -25,6 +25,7 @@ while getopts "d:p:a:s:e:m:c:" opt; do
         s) START_DATE="$OPTARG" ;;
         e) END_DATE="$OPTARG" ;;
         c) GOOGLE_ADS_ACCOUNT="$OPTARG" ;;
+        t) TAG_LANDINGS="$OPTARG" ;;
         \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
         :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
     esac
@@ -52,11 +53,17 @@ if [ -z "$END_DATE" ]; then
   END_DATE=:YYYYMMDD-1
 fi
 
+if [ -z "$TAG_LANDINGS" ]; then
+  TAG_LANDINGS=0
+else
+  TAG_LANDINGS=1
+fi
+
 fetch_ads_data() {
-  gaarf queries/ads/*.sql \
-    --account $GOOGLE_ADS_ACCOUNT \
-    --ads-config $ADS_CONFIG \
-    --customer-id-query 'SELECT customer.id FROM campaign WHERE campaign.advertising_channel_type = SEARCH' \
+  garf queries/ads/*.sql --source google-ads \
+    --source.account=$GOOGLE_ADS_ACCOUNT \
+    --source.path-to-config=$ADS_CONFIG \
+    --source.customer-id-query='SELECT customer.id FROM campaign WHERE campaign.advertising_channel_type = SEARCH' \
     --macro.start-date=$START_DATE \
     --macro.end-date=$END_DATE \
     --output bq \
@@ -80,7 +87,9 @@ generate_bq_views() {
 }
 
 fetch_ads_data
-tag_landing_pages
+if [[ $TAG_LANDINGS -eq 1 ]]; then
+  tag_landing_pages
+fi
 for step in 01 02 03; do
   echo "Run step $step"
   generate_bq_views $step
