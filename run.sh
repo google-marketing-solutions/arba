@@ -13,7 +13,7 @@
 # limitations under the License.
 
 usage() {
-    echo "Usage: $0 -d <dataset> -p <project> -a <ads-config> -s <start_date> -e <end_date> -c <account>"
+    echo "Usage: $0 -d <dataset> -p <project> -a <ads-config> -s <start_date> -e <end_date> -c <account> -l <logger_type>"
     exit 1
 }
 
@@ -25,7 +25,8 @@ while getopts "d:p:a:s:e:m:c:t:" opt; do
         s) START_DATE="$OPTARG" ;;
         e) END_DATE="$OPTARG" ;;
         c) GOOGLE_ADS_ACCOUNT="$OPTARG" ;;
-        t) TAG_LANDINGS="$OPTARG" ;;
+        t) TAGGING_ENABLED="$OPTARG" ;;
+        l) LOGGER="$OPTARG" ;;
         \?) echo "Invalid option: -$OPTARG" >&2; usage ;;
         :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
     esac
@@ -53,10 +54,13 @@ if [ -z "$END_DATE" ]; then
   END_DATE=:YYYYMMDD-1
 fi
 
-if [ -z "$TAG_LANDINGS" ]; then
-  TAG_LANDINGS=0
+if [ -z "$TAGGING_ENABLED" ]; then
+  TAGGING_ENABLED=0
 else
-  TAG_LANDINGS=1
+  TAGGING_ENABLED=1
+fi
+if [ -z "$LOGGER" ]; then
+  LOGGER='rich'
 fi
 
 fetch_ads_data() {
@@ -68,7 +72,8 @@ fetch_ads_data() {
     --macro.end-date=$END_DATE \
     --output bq \
     --bq.project=$GOOGLE_CLOUD_PROJECT \
-    --bq.dataset=$BQ_DATASET
+    --bq.dataset=$BQ_DATASET \
+    --logger $LOGGER
 }
 
 tag_landing_pages() {
@@ -83,12 +88,67 @@ generate_bq_views() {
     --source bq \
     --source.project-id=$GOOGLE_CLOUD_PROJECT \
     --macro.target_dataset=$BQ_DATASET \
-    --macro.dataset=$BQ_DATASET
+    --macro.dataset=$BQ_DATASET \
+    --logger $LOGGER
+}
+
+get_rsa() {
+  garf queries/sql/input/rsa.sql \
+    --source bq \
+    --source.project-id=$GOOGLE_CLOUD_PROJECT \
+    --macro.target_dataset=$BQ_DATASET \
+    --macro.dataset=$BQ_DATASET \
+    --output csv
+}
+
+_generate_placeholders() {
+  echo 'CREATE TABLE IF NOT EXISTS `{dataset}.landing_page_relevance` AS (SELECT 0 AS campaign_id, "" AS url, 0.0 AS relevance_score LIMIT 0);' > /tmp/arba_landings.sql
+  echo 'CREATE TABLE IF NOT EXISTS `{dataset}.usp` AS (SELECT "" AS identifier, "" AS content LIMIT 0);' > /tmp/arba_usp.sql
+  echo 'CREATE TABLE IF NOT EXISTS `{dataset}.cta` AS (SELECT "" AS identifier, "" AS content LIMIT 0);' > /tmp/arba_cta.sql
+  garf /tmp/arba_*.sql \
+    --source bq --source.project_id=$GOOGLE_CLOUD_PROJECT --macro.dataset=$BQ_DATASET &> /dev/null
+}
+
+_process_rsa() {
+  local prompt=$1
+  local schema=$2
+  local output=$3
+  media-tagger describe \
+    --db-uri $INTERNAL_V2_FILONOV_DB_URI \
+    --input rsa.csv \
+    --input.column-name=ad \
+    --media-type text \
+    --tagger gemini \
+    --tagger.custom-prompt=$prompt \
+    --tagger.custom-schema=$schema \
+    --writer bq \
+    --bq.project=$GOOGLE_CLOUD_PROJECT \
+    --bq.dataset=$BQ_DATASET \
+    --output $output \
+    --logger $LOGGER
+}
+
+get_cta() {
+  _process_rsa ./prompts/cta-prompt.txt ./prompts/boolean.json cta
+}
+
+get_usp() {
+  _process_rsa ./prompts/usp-prompt.txt ./prompts/boolean.json usp
+}
+
+process_rsa() {
+  get_rsa
+  get_usp
+  get_cta
+  rm rsa.csv
 }
 
 fetch_ads_data
-if [[ $TAG_LANDINGS -eq 1 ]]; then
+if [[ $TAGGING_ENABLED -eq 1 ]]; then
   tag_landing_pages
+  process_rsa
+else
+  _generate_placeholders
 fi
 for step in 01 02 03; do
   echo "Run step $step"
