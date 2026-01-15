@@ -25,9 +25,20 @@ pip install -r requirements.txt
 
 ### Usage
 
+Provide default values in `workflow-config.yaml`
+
+* `bq_project` - name of Google Cloud Project.
+* `google_ads_account` - ID(s) of Google Ads accounts .
+
+Optionally you can provide other parameters:
+
+* `bq_dataset` - name of BigQuery dataset where the AdRank Booster data to be stored (by default `arba`).
+* `google_ads_config` -  path to `google-ads.yaml` file (by default expected in your home directory).
+
+Run the following command to start generating data:
+
 ```
-export GOOGLE_ADS_ACCOUNT=
-bash run.sh
+garf -w workflow-config.yaml
 ```
 
 ## Disclaimer

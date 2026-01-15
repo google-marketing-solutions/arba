@@ -1,0 +1,101 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Fill the values below
+default_bq_project: &bq_project ""
+default_bq_dataset: &bq_dataset "arba"
+google_ads_account: &google_ads_account ""
+google_ads_config: &google_ads_config "~/google-ads.yaml"
+
+writer_section: &writer_defaults
+  writer: bq
+  writer_parameters:
+    project: *bq_project
+    dataset: *bq_dataset
+
+fetcher_section: &google_defaults
+  fetcher_parameters:
+    path_to_config: *google_ads_config
+    account: *google_ads_account
+    customer_id_query: |
+      SELECT
+        customer.id
+      FROM campaign
+      WHERE campaign.advertising_channel_type = SEARCH
+bq_section: &bq_defaults
+  fetcher_parameters:
+    project_id: *bq_project
+google-ads_macro_section: &g_macros
+  query_parameters:
+    macro:
+      start_date: :YYYYMMDD-30
+      end_date: :YYYYMMDD-1
+      min_impressions: 1
+
+bq_macro_section: &bq_macros
+  query_parameters:
+    macro:
+      dataset: *bq_dataset
+      target_dataset: *bq_dataset
+
+
+
+steps:
+  - alias: googleads
+    fetcher: google-ads
+    <<: [*writer_defaults, *google_defaults, *g_macros]
+    queries:
+      - folder: queries/ads/
+
+  - alias: empty_bq
+    fetcher: bq
+    <<: [*bq_defaults, *bq_macros]
+    queries:
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS `{dataset}.landing_page_relevance` AS (
+              SELECT 0 AS campaign_id, "" AS url, 0.0 AS relevance_score
+              LIMIT 0
+            );
+          title: empty_landing_page_relevance
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS `{dataset}.usp` AS (
+              SELECT "" AS identifier, "" AS content LIMIT 0
+            );
+          title: empty_usp
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS `{dataset}.cta` AS (
+              SELECT "" AS identifier, "" AS content LIMIT 0
+            );
+          title: empty_cta
+
+  - alias: bq_01
+    fetcher: bq
+    <<: [*bq_defaults, *bq_macros]
+    queries:
+      - folder: queries/sql/01
+
+  - alias: bq_02
+    fetcher: bq
+    <<: [*bq_defaults, *bq_macros]
+    queries:
+      - folder: queries/sql/02
+
+  - alias: bq_03
+    fetcher: bq
+    <<: [*bq_defaults, *bq_macros]
+    queries:
+      - folder: queries/sql/03
