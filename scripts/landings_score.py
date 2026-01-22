@@ -17,16 +17,15 @@
 """Processes landing pages to find relevance between ads and keywords."""
 
 import os
+import re
 
-import garf_core
+import pydantic
 import typer
-from garf_executors.bq_executor import BigQueryExecutor
-from garf_executors.entrypoints import utils as garf_utils
-from garf_io import reader, writer
+from garf.core.report import GarfReport
+from garf.executors.bq_executor import BigQueryExecutor
+from garf.executors.entrypoints import utils as garf_utils
+from garf.io import reader, writer
 from media_tagging import MediaTaggingRequest, MediaTaggingService, repositories
-from media_tagging.taggers.llm.gemini.tagging_strategies import (
-  _parse_json as parse_json,
-)
 from typing_extensions import Annotated
 
 logger = garf_utils.init_logging(name='landings')
@@ -44,6 +43,12 @@ Format the response as a JSON object with the following schema:
   irrelevant to and 10 is completely relevant>"
 }}
 """
+
+
+class ScoreSchema(pydantic.BaseModel):
+  score: int = pydantic.Field(
+    description='relevance score between webpage, ad copy and search keywords'
+  )
 
 
 def process_landing(
@@ -69,15 +74,19 @@ def process_landing(
       tagger_type='gemini',
       media_paths=[landing_url],
       tagging_options={
-        'model_name': 'gemini-2.5-flash',
+        'model_name': 'gemini-3-flash-preview',
         'custom_prompt': prompt,
+        'custom_schema': ScoreSchema,
       },
       media_type='WEBPAGE',
     )
   )
   try:
-    score = parse_json(result.results[0].content.text).get('score')
-  except Exception:
+    score_raw = result.results[0].content.text[0].get('text')
+    scores_found = re.findall(r'-?\d+', score_raw)
+    score = int(scores_found[0])
+  except Exception as e:
+    logger.error('Failed to parse score, reason: %s', str(e))
     score = -1
   return score
 
@@ -92,7 +101,15 @@ def build_prompt(landing_url: str, ads: list[str], keywords: list[str]) -> str:
 
 
 @app.command()
-def main(dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba'):
+def main(
+  dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba',
+  campaigns_to_process: Annotated[
+    int, typer.Option(help='Number of top campaigns sorted by cost')
+  ] = 10,
+  keywords_per_campaign: Annotated[
+    int, typer.Option(help='Number of top spending keywords per campaign')
+  ] = 10,
+) -> None:
   tagging_service = MediaTaggingService(
     repositories.SqlAlchemyTaggingResultsRepository(
       db_url=os.getenv('ARBA_DB_URI')
@@ -101,26 +118,29 @@ def main(dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba'):
 
   bq_executor = BigQueryExecutor()
   query = reader.FileReader().read(query_path='./landings.sql')
-  query = query.format(dataset=dataset)
+  query = query.format(
+    dataset=dataset,
+    top_n_campaigns=campaigns_to_process,
+    top_n_keywords=keywords_per_campaign,
+  )
   landings = bq_executor.execute(
     query=query,
     title='landings',
   )
 
   data = []
-  max_processed = 50
   bq_writer = writer.create_writer('bq', dataset=dataset)
   for landing, items in landings.to_dict('url').items():
     for campaign in items:
-      if max_processed < 0:
-        report = garf_core.GarfReport(
+      if campaigns_to_process < 0:
+        report = GarfReport(
           results=data, column_names=['campaign_id', 'url', 'relevance_score']
         )
         bq_writer.write(report, 'landing_page_relevance')
         return
       campaign_id = campaign.get('campaign_id')
       logger.info('working on campaign %s for landing %s', campaign_id, landing)
-      logger.info('%d iterations left...', max_processed)
+      logger.info('%d iterations left...', campaigns_to_process)
 
       score = process_landing(
         tagging_service,
@@ -129,8 +149,8 @@ def main(dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba'):
         keywords=campaign.get('keywords'),
       )
       data.append([campaign_id, landing, score])
-      max_processed = max_processed - 1
-  report = garf_core.GarfReport(
+      campaigns_to_process = campaigns_to_process - 1
+  report = GarfReport(
     results=data, column_names=['campaign_id', 'url', 'relevance_score']
   )
   bq_writer.write(report, 'landing_page_relevance')
