@@ -27,9 +27,13 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   )
   SELECT
     AGA.*,
-    LPR.relevance_score,
+    COALESCE(LPR.relevance_score, -1) AS relevance_score,
     U.content AS has_usp,
-    C.content AS has_cta
+    C.content AS has_cta,
+    REGEXP_CONTAINS(
+      CONCAT(LOWER(AGA.headlines), '|', LOWER(AGA.descriptions)),
+      'keyword:'
+    ) AS has_dki
   FROM `{dataset}.ad_group_ad` AS AGA
   LEFT JOIN LandingPageRelevance AS LPR
     USING(campaign_id)
