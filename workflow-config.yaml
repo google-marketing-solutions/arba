@@ -72,15 +72,30 @@ steps:
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS `{dataset}.usp` AS (
-              SELECT "" AS identifier, "" AS content LIMIT 0
+              SELECT "" AS ad, TRUE AS has_usp LIMIT 0
             );
           title: empty_usp
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS `{dataset}.cta` AS (
-              SELECT "" AS identifier, "" AS content LIMIT 0
+              SELECT "" AS ad, TRUE AS has_cta LIMIT 0
             );
           title: empty_cta
+
+  - alias: tagging
+    fetcher: media-tagging
+    queries:
+      - folder: queries/tagging
+    <<: *writer_defaults
+    fetcher_parameters:
+      project_id: *bq_project
+    query_parameters:
+      macro:
+        ads: |
+          gquery:bq:SELECT
+            DISTINCT CONCAT(headlines, '|', descriptions) AS ad
+          FROM `{dataset}.ad_group_ad`;
+        dataset: *bq_dataset
 
   - alias: bq_01
     fetcher: bq

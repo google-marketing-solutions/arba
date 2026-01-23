@@ -28,8 +28,8 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   SELECT
     AGA.*,
     COALESCE(LPR.relevance_score, -1) AS relevance_score,
-    U.content AS has_usp,
-    C.content AS has_cta,
+    U.has_usp,
+    C.has_cta,
     REGEXP_CONTAINS(
       CONCAT(LOWER(AGA.headlines), '|', LOWER(AGA.descriptions)),
       'keyword:'
@@ -38,7 +38,7 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   LEFT JOIN LandingPageRelevance AS LPR
     USING(campaign_id)
   LEFT JOIN `{dataset}.usp` AS U
-    ON CONCAT(AGA.headlines, '|', AGA.descriptions) = U.identifier
+    ON CONCAT(AGA.headlines, '|', AGA.descriptions) = U.ad
   LEFT JOIN `{dataset}.cta` AS C
-    ON CONCAT(AGA.headlines, '|', AGA.descriptions) = C.identifier
+    ON CONCAT(AGA.headlines, '|', AGA.descriptions) = C.ad
 );
