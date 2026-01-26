@@ -1,0 +1,115 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Fill the values below
+google_ads_account: &google_ads_account ""
+google_ads_config: &google_ads_config "~/google-ads.yaml"
+db_connection: &db "sqlite:///arba.db"
+migration_db: &migration_db "postgresql://postgres:postgres@localhost:5432/postgres"
+
+writer_section: &writer_defaults
+  writer: sqldb
+  writer_parameters:
+    connection_string: *db
+sql_section: &sql_defaults
+  fetcher_parameters:
+    connection_string: *db
+
+fetcher_section: &google_defaults
+  fetcher_parameters:
+    path_to_config: *google_ads_config
+    account: *google_ads_account
+    customer_id_query: |
+      SELECT
+        customer.id
+      FROM campaign
+      WHERE campaign.advertising_channel_type = SEARCH
+google-ads_macro_section: &g_macros
+  query_parameters:
+    macro:
+      start_date: :YYYYMMDD-90
+      end_date: :YYYYMMDD-1
+      min_impressions: 1
+
+
+
+
+steps:
+  - alias: googleads
+    fetcher: google-ads
+    <<: [*writer_defaults, *google_defaults, *g_macros]
+    queries:
+      - folder: queries/ads/
+
+  - alias: empty_tables
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    queries:
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS landing_page_relevance AS
+              SELECT 0 AS campaign_id, '' AS url, 0.0 AS relevance_score
+              LIMIT 0;
+          title: empty_landing_page_relevance
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS usp AS
+              SELECT '' AS ad, TRUE AS has_usp LIMIT 0;
+          title: empty_usp
+      - query:
+          text: |
+            CREATE TABLE IF NOT EXISTS cta AS
+              SELECT '' AS ad, TRUE AS has_cta LIMIT 0;
+          title: empty_cta
+
+  - alias: tagging
+    fetcher: media-tagging
+    queries:
+      - folder: queries/tagging
+    <<: *writer_defaults
+    fetcher_parameters:
+      connection_string: *db
+    query_parameters:
+      macro:
+        ads: |
+          gquery:sqldb:SELECT
+            DISTINCT headlines ||  '|' || descriptions AS ad
+          FROM ad_group_ad;
+
+  - alias: sql01
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    queries:
+      - folder: queries/sqlite/01
+
+  - alias: sql02
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    queries:
+      - folder: queries/sqlite/02
+
+  - alias: sql03
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    queries:
+      - folder: queries/sqlite/03
+
+  - alias: migration
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    writer: sqldb
+    writer_parameters:
+      connection_string: *migration_db
+    queries:
+      - folder: queries/sqlite/migrations
