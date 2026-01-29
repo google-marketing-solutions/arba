@@ -130,6 +130,7 @@ def main(
 
   data = []
   bq_writer = writer.create_writer('bq', dataset=dataset)
+  campaigns_to_process = min(campaigns_to_process, len(landings))
   for landing, items in landings.to_dict('url').items():
     for campaign in items:
       if campaigns_to_process < 0:
