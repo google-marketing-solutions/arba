@@ -1,4 +1,4 @@
 media-tagging>=2.3.3
 garf-google-ads>=1.0.2
-garf-executors[bq]>=1.0.6
+garf-executors[bq]>=1.1.0
 garf-media-tagging
