@@ -14,6 +14,28 @@
 
 -- Extracts responsive search ads texts.
 
-SELECT DISTINCT
-  headlines || '|' || descriptions AS ad
-FROM ad_group_ad;
+CREATE TABLE rsa_input AS
+WITH AdGroupAds AS (
+  SELECT
+    ad_group_id,
+    REPLACE(REPLACE(REPLACE(headlines || '|' || descriptions, '(', ''), ')', ''), ',', '') AS ad,
+    SUM(cost) AS cost
+  FROM ad_group_ad
+  GROUP BY ad_group_id, ad
+  HAVING cost > 0
+  ORDER BY cost DESC
+),
+Positions AS (
+  SELECT
+    ad_group_id,
+    ad,
+    ROW_NUMBER() OVER() AS  position,
+    cost
+  FROM AdGroupAds
+)
+SELECT
+  ad_group_id,
+  ad,
+  cost,
+  SUM(cost) OVER (ORDER BY position) / SUM(cost) OVER() * 100 AS cost_share
+FROM Positions;

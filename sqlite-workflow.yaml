@@ -73,6 +73,12 @@ steps:
               SELECT '' AS ad, TRUE AS has_cta LIMIT 0;
           title: empty_cta
 
+  - alias: sql_input
+    fetcher: sqldb
+    <<: [*sql_defaults]
+    queries:
+      - folder: queries/sqlite/input
+
   - alias: tagging
     fetcher: media-tagging
     queries:
@@ -84,8 +90,10 @@ steps:
       macro:
         ads: |
           gquery:sqldb:SELECT
-            DISTINCT headlines ||  '|' || descriptions AS ad
-          FROM ad_group_ad;
+            DISTINCT ad
+          FROM rsa_input
+          WHERE cost_share < {cost_share};
+        cost_share: 80
 
   - alias: sql01
     fetcher: sqldb

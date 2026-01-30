@@ -82,6 +82,12 @@ steps:
             );
           title: empty_cta
 
+  - alias: bq_input
+    fetcher: bq
+    <<: [*bq_defaults, *bq_macros]
+    queries:
+      - folder: queries/sql/input
+
   - alias: tagging
     fetcher: media-tagging
     queries:
@@ -92,10 +98,9 @@ steps:
     query_parameters:
       macro:
         ads: |
-          gquery:bq:SELECT
-            DISTINCT CONCAT(headlines, '|', descriptions) AS ad
-          FROM `{dataset}.ad_group_ad`;
+          gquery:bq:SELECT DISTINCT ad AS ad FROM `{dataset}.rsa_input` WHERE cost_share < {cost_share};
         dataset: *bq_dataset
+        cost_share: 80
 
   - alias: bq_01
     fetcher: bq

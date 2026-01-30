@@ -41,7 +41,6 @@ tag_landing_pages() {
   python landings_score.py --dataset=$BQ_DATASET
   cd ..
 }
-garf
 if [[ $TAGGING_ENABLED -eq 1 ]]; then
   garf -w $WORKFLOW --workflow-include googleads --logger $LOGGER
   tag_landing_pages
