@@ -54,5 +54,5 @@ CREATE OR REPLACE TABLE `{target_dataset}.rsa_to_remove` AS (
   SELECT
     *
   FROM AdGroupAdStrengthRanked
-  WHERE ad_strength_rank > 1
+  WHERE ad_strength_rank >= 1
 );
