@@ -41,6 +41,26 @@ Run the following command to start generating data:
 garf -w workflow-config.yaml
 ```
 
+### Run in Docker
+
+1. Build image
+
+```
+docker build -t arba .
+```
+
+2. Run
+
+```
+docker run \
+  -v /path/to/google-ads.yaml:/app/google-ads.yaml \
+  -v /path/to/application_default_credentials.json:/app/service_account.json \
+  -e GEMINI_API_KEY=$GEMINI_API_KEY \
+  -e GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT \
+  arba -a <GOOGLE_ADS_ACCOUNT> -c /app/google-ads.yaml
+```
+
+
 ## Disclaimer
 This is not an officially supported Google product. This project is not
 eligible for the [Google Open Source Software Vulnerability Rewards

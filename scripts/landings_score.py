@@ -16,6 +16,7 @@
 
 """Processes landing pages to find relevance between ads and keywords."""
 
+import logging
 import os
 import re
 
@@ -28,7 +29,6 @@ from garf.io import reader, writer
 from media_tagging import MediaTaggingRequest, MediaTaggingService, repositories
 from typing_extensions import Annotated
 
-logger = garf_utils.init_logging(name='landings')
 app = typer.Typer()
 
 PROMPT_TEMPLATE = """
@@ -86,7 +86,7 @@ def process_landing(
     scores_found = re.findall(r'-?\d+', score_raw)
     score = int(scores_found[0])
   except Exception as e:
-    logger.error('Failed to parse score, reason: %s', str(e))
+    logging.error('Failed to parse score, reason: %s', str(e))
     score = -1
   return score
 
@@ -109,7 +109,10 @@ def main(
   keywords_per_campaign: Annotated[
     int, typer.Option(help='Number of top spending keywords per campaign')
   ] = 10,
+  log_name: Annotated[str, typer.Option(help='Name of logger')] = 'arba',
+  logger: Annotated[str, typer.Option(help='Type of logger')] = 'local',
 ) -> None:
+  garf_utils.init_logging(name=log_name, logger_type=logger)
   tagging_service = MediaTaggingService(
     repositories.SqlAlchemyTaggingResultsRepository(
       db_url=os.getenv('ARBA_DB_URI')
@@ -140,8 +143,10 @@ def main(
         bq_writer.write(report, 'landing_page_relevance')
         return
       campaign_id = campaign.get('campaign_id')
-      logger.info('working on campaign %s for landing %s', campaign_id, landing)
-      logger.info('%d iterations left...', campaigns_to_process)
+      logging.info(
+        'working on campaign %s for landing %s', campaign_id, landing
+      )
+      logging.info('%d iterations left...', campaigns_to_process)
 
       score = process_landing(
         tagging_service,
