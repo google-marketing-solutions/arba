@@ -19,7 +19,7 @@
 CREATE OR REPLACE TABLE `{target_dataset}.rsa_input` AS (
   WITH AdGroupAds AS (
     SELECT
-      ad_group_id,
+      ad_group_ad_id,
       REGEXP_REPLACE(CONCAT(headlines, '|', descriptions), r'[(),]', '') AS ad,
       SUM(cost) AS cost,
     FROM `{dataset}.ad_group_ad`
@@ -29,14 +29,14 @@ CREATE OR REPLACE TABLE `{target_dataset}.rsa_input` AS (
   ),
   Positions AS (
     SELECT
-      ad_group_id,
+      ad_group_ad_id,
       ad,
       ROW_NUMBER() OVER() AS  position,
       cost
     FROM AdGroupAds
   )
   SELECT
-    ad_group_id,
+    ad_group_ad_id,
     ad,
     cost,
     SUM(cost) OVER (ORDER BY position) / SUM(cost) OVER() * 100 AS cost_share
