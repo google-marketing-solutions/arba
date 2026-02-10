@@ -35,6 +35,7 @@ SELECT
   metrics.search_rank_lost_impression_share AS search_rank_lost_impression_share,
   metrics.search_impression_share AS search_impression_share,
   metrics.search_absolute_top_impression_share AS search_absolute_top_impression_share,
+  metrics.search_top_impression_share AS search_top_impression_share
 FROM  keyword_view
 WHERE
   ad_group_criterion.negative = FALSE
