@@ -26,12 +26,16 @@ WITH LandingPageRelevance AS (
 )
 SELECT
   AGA.*,
-  COALESCE(LPR.relevance_score, -1) AS relevance_score,
-  U.has_usp,
-  C.has_cta,
-  (RI.ad) REGEXP 'keyword:' AS has_dki
+  IFNULL(LPR.relevance_score, -1) AS relevance_score,
+  IFNULL(U.has_usp, -1) AS has_usp,
+  IFNULL(C.has_cta, -1) AS has_cta,
+  RI.ad LIKE '%keyword:%' AS has_dki
 FROM ad_group_ad AS AGA
-LEFT JOIN LandingPageRelevance AS LPR USING (campaign_id)
-LEFT JOIN rsa_input AS RI USING (ad_group_id)
-LEFT JOIN usp AS U USING (ad)
-LEFT JOIN cta AS C USING (ad);
+LEFT JOIN LandingPageRelevance AS LPR
+  USING (campaign_id)
+LEFT JOIN rsa_input AS RI
+  USING (ad_group_ad_id)
+LEFT JOIN usp AS U
+  USING (ad)
+LEFT JOIN cta AS C
+  USING (ad);
