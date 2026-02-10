@@ -29,7 +29,7 @@ SELECT
   IFNULL(LPR.relevance_score, -1) AS relevance_score,
   IFNULL(U.has_usp, -1) AS has_usp,
   IFNULL(C.has_cta, -1) AS has_cta,
-  RI.ad LIKE '%keyword:%' AS has_dki
+  LOWER(RI.ad) LIKE '%keyword:%' AS has_dki
 FROM ad_group_ad AS AGA
 LEFT JOIN LandingPageRelevance AS LPR
   USING (campaign_id)
