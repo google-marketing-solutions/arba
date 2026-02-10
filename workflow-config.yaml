@@ -86,7 +86,7 @@ steps:
     fetcher: bq
     <<: [*bq_defaults, *bq_macros]
     queries:
-      - folder: queries/sql/input
+      - folder: queries/bq/input
 
   - alias: tagging
     fetcher: media-tagging
@@ -106,16 +106,16 @@ steps:
     fetcher: bq
     <<: [*bq_defaults, *bq_macros]
     queries:
-      - folder: queries/sql/01
+      - folder: queries/bq/01
 
   - alias: bq_02
     fetcher: bq
     <<: [*bq_defaults, *bq_macros]
     queries:
-      - folder: queries/sql/02
+      - folder: queries/bq/02
 
   - alias: bq_03
     fetcher: bq
     <<: [*bq_defaults, *bq_macros]
     queries:
-      - folder: queries/sql/03
+      - folder: queries/bq/03
