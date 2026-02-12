@@ -83,7 +83,10 @@ steps:
     fetcher: media-tagging
     queries:
       - folder: queries/tagging
-    <<: *writer_defaults
+    writer: sqldb
+    writer_parameters:
+      connection_string: *db
+      if_exists: append
     fetcher_parameters:
       connection_string: *db
     query_parameters:
@@ -92,8 +95,11 @@ steps:
           gquery:sqldb:SELECT
             DISTINCT ad
           FROM rsa_input
-          WHERE cost_share < {cost_share};
+          WHERE
+            cost_share < {cost_share}
+            OR ad_position <= {max_results};
         cost_share: 80
+        max_results: 100
 
   - alias: sql01
     fetcher: sqldb

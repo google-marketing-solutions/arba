@@ -92,15 +92,25 @@ steps:
     fetcher: media-tagging
     queries:
       - folder: queries/tagging
-    <<: *writer_defaults
+    writer: bq
+    writer_parameters:
+      project: *bq_project
+      dataset: *bq_dataset
+      write_disposition: append
     fetcher_parameters:
-      project_id: *bq_project
+      project: *bq_project
     query_parameters:
       macro:
         ads: |
-          gquery:bq:SELECT DISTINCT ad AS ad FROM `{dataset}.rsa_input` WHERE cost_share < {cost_share};
+          gquery:bq:SELECT
+            DISTINCT ad
+          FROM `{dataset}.rsa_input`
+          WHERE
+            cost_share < {cost_share}
+            OR ad_position <= {max_results};
         dataset: *bq_dataset
         cost_share: 80
+        max_results: 100
 
   - alias: bq_01
     fetcher: bq

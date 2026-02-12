@@ -27,18 +27,40 @@ CREATE OR REPLACE TABLE `{target_dataset}.rsa_input` AS (
     HAVING cost > 0
     ORDER BY cost DESC
   ),
+  ProcessedCta AS (
+    SELECT DISTINCT
+      ad,
+      ANY_VALUE(has_cta) AS has_cta
+    FROM `{dataset}.cta`
+    GROUP BY 1
+  ),
+  ProcessedUsp AS (
+    SELECT DISTINCT
+      ad,
+      ANY_VALUE(has_usp) AS has_usp
+    FROM `{dataset}.usp`
+    GROUP BY 1
+  ),
   Positions AS (
     SELECT
-      ad_group_ad_id,
-      ad,
-      ROW_NUMBER() OVER() AS  position,
-      cost
-    FROM AdGroupAds
+      AGA.ad_group_ad_id,
+      AGA.ad,
+      ROW_NUMBER() OVER() AS position,
+      AGA.cost,
+      PC.has_cta IS NULL AS unprocessed_cta,
+      PU.has_usp IS NULL AS unprocessed_usp
+    FROM AdGroupAds AS AGA
+    LEFT JOIN ProcessedCta AS PC
+      USING (ad)
+    LEFT JOIN ProcessedUSP AS PU
+      USING (ad)
   )
   SELECT
     ad_group_ad_id,
     ad,
     cost,
+    position AS ad_position,
     SUM(cost) OVER (ORDER BY position) / SUM(cost) OVER() * 100 AS cost_share
   FROM Positions
+  WHERE unprocessed_cta OR unprocessed_usp
 );
