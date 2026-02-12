@@ -16,6 +16,18 @@ Looker Studio dashboard with recommendations on improving performance of search 
 1. Credentials for Google Ads API access which stored in `google-ads.yaml`.
    See details [here](https://github.com/google/ads-api-report-fetcher/blob/main/docs/how-to-authenticate-ads-api.md).
 1. A Google Cloud project with billing account attached.
+1. [Vertex AI API](https://pantheon.corp.google.com/apis/library/aiplatform.googleapis.com) enabled.
+1.  Environmental variables specified:
+  * [Gemini API key](https://support.google.com/googleapi/answer/6158862?hl=en) to access to access Google Gemini.
+
+    ```bash
+    export GEMINI_API_KEY=<YOUR_API_KEY_HERE>
+    ```
+
+  * `GOOGLE_CLOUD_PROJECT` - points the Google Cloud project with Vertex AI API enabled.
+    ```
+    export GOOGLE_CLOUD_PROJECT=<YOUR_PROJECT_HERE>
+    ```
 
 ### Installation
 
@@ -58,6 +70,12 @@ docker run \
   -e GEMINI_API_KEY=$GEMINI_API_KEY \
   -e GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT \
   arba -a <GOOGLE_ADS_ACCOUNT> -c /app/google-ads.yaml
+```
+
+### Deploy to Google Cloud
+
+```bash
+./deploy.sh
 ```
 
 
