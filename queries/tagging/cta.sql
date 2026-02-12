@@ -21,7 +21,7 @@ SELECT
   content.text AS has_cta
 FROM description
 WHERE
-  tagger.custom_prompt = "Assess the following text assets if there's any call to action in them.."
+  tagger.custom_prompt = "Assess the following text assets if there's any call to action in them."
   AND tagger_type = "gemini"
   AND media_type = TEXT
   AND media_paths IN ({ads})

@@ -24,6 +24,20 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
       MIN(relevance_score) AS relevance_score
     FROM `{dataset}.landing_page_relevance`
     GROUP BY 1
+  ),
+  DedupUsp AS (
+    SELECT
+      ad,
+      ANY_VALUE(has_usp) AS has_usp
+    FROM `{dataset}.usp`
+    GROUP BY 1
+  ),
+  DedupCta AS (
+    SELECT
+      ad,
+      ANY_VALUE(has_cta) AS has_cta
+    FROM `{dataset}.cta`
+    GROUP BY 1
   )
   SELECT
     AGA.*,
@@ -36,8 +50,8 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
     USING (campaign_id)
   LEFT JOIN `{target_dataset}.rsa_input` AS RI
     USING (ad_group_ad_id)
-  LEFT JOIN `{dataset}.usp` AS U
+  LEFT JOIN DedupUsp AS U
     USING (ad)
-  LEFT JOIN `{dataset}.cta` AS C
+  LEFT JOIN DedupCta AS C
     USING (ad)
 );

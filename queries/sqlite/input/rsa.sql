@@ -25,17 +25,38 @@ WITH AdGroupAds AS (
   GROUP BY 1, 2
   ORDER BY cost DESC
 ),
-Positions AS (
-  SELECT
-    ad_group_ad_id,
+ProcessedCta AS (
+  SELECT DISTINCT
     ad,
-    ROW_NUMBER() OVER() AS  position,
-    cost
-  FROM AdGroupAds
+    ANY_VALUE(has_cta) AS has_cta
+  FROM cta
+  GROUP BY 1
+),
+ProcessedUsp AS (
+  SELECT DISTINCT
+    ad,
+    ANY_VALUE(has_usp) AS has_usp
+  FROM usp
+  GROUP BY 1
+),
+SELECT
+  AGA.ad_group_ad_id,
+  AGA.ad,
+  ROW_NUMBER() OVER() AS position,
+  AGA.cost,
+  PC.has_cta IS NULL AS unprocessed_cta,
+  PU.has_usp IS NULL AS unprocessed_usp
+FROM AdGroupAds AS AGA
+LEFT JOIN ProcessedCta AS PC
+  USING (ad)
+LEFT JOIN ProcessedUSP AS PU
+  USING (ad)
 )
 SELECT
   ad_group_ad_id,
   ad,
   cost,
+  position AS ad_position,
   SUM(cost) OVER (ORDER BY position) / SUM(cost) OVER() * 100 AS cost_share
-FROM Positions;
+FROM Positions
+WHERE unprocessed_cta OR unprocessed_usp;
