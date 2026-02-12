@@ -26,7 +26,8 @@ CREATE OR REPLACE TABLE `{target_dataset}.summary_impression_grow` AS (
       campaign_name,
       date,
       SUM(KP.cost) AS daily_cost,
-      AVG(search_impression_share) AS impression_share
+      AVG(search_impression_share) AS impression_share,
+      AVG(search_top_impression_share) AS search_top_impression_share
     FROM `{dataset}.keyword_performance` AS KP
     LEFT JOIN `{dataset}.ad_group_mapping` AS AGM USING (ad_group_id)
     GROUP BY ALL

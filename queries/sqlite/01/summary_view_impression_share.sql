@@ -25,7 +25,8 @@ WITH CampaignAggregated AS (
     campaign_name,
     date,
     SUM(KP.cost) AS daily_cost,
-    AVG(search_impression_share) AS impression_share
+    AVG(search_impression_share) AS impression_share,
+    AVG(search_top_impression_share) AS search_top_impression_share
   FROM keyword_performance AS KP
   LEFT JOIN ad_group_mapping AS AGM USING (ad_group_id)
   GROUP BY
@@ -52,6 +53,16 @@ RollingCalculation AS (
       ORDER BY date DESC
       ROWS BETWEEN 7 FOLLOWING AND 13 FOLLOWING
     ) AS impression_share_week_before,
+    AVG(search_top_impression_share) OVER (
+      PARTITION BY campaign_id
+      ORDER BY date DESC
+      ROWS BETWEEN CURRENT ROW AND 6 FOLLOWING
+    ) AS search_top_impression_share_last_week,
+    AVG(search_top_impression_share) OVER (
+      PARTITION BY campaign_id
+      ORDER BY date DESC
+      ROWS BETWEEN 7 FOLLOWING AND 13 FOLLOWING
+    ) AS search_top_impression_share_week_before,
     ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY date DESC) AS rn
   FROM CampaignAggregated
 )
@@ -62,6 +73,8 @@ SELECT
   campaign_name,
   cost,
   impression_share_last_week,
-  impression_share_week_before
+  impression_share_week_before,
+  top_impression_share_last_week,
+  top_impression_share_week_before
 FROM RollingCalculation
 WHERE rn = 1;
