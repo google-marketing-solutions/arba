@@ -92,12 +92,29 @@ git clone https://github.com/google-marketing-solutions/arba.git
 ./deploy.sh
 ```
 
+#### Upgrading Arba
+
+Upgrade make new queries and dependencies available.
+
+```bash
+./upgrade.sh
+```
+
+#### Uninstalling Arba
+
+Uninstall removes Arba Cloud Storage bucker, docker image, Cloud Run Job and Cloud Scheduler only.
+You need to remove BigQuery dataset manually.
+
+```bash
+./uninstall.sh
+```
+
 ## Create dashboard
 
 Provide BigQuery project and dataset names where `arba` data are located.
 
 ```
-./scripts/create_dashboard -p $GOOGLE_CLOUD_PROJECT -d arba
+./scripts/create_dashboard.sh -p $GOOGLE_CLOUD_PROJECT -d arba
 ```
 
 

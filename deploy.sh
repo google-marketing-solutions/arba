@@ -14,36 +14,10 @@
 
 set -e
 
-# Colors
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+source ./common.sh
 
-if [[ -n "$GOOGLE_CLOUD_PROJECT" ]]; then
-  echo "Current project is set to $GOOGLE_CLOUD_PROJECT."
-  while true; do
-    read -p "Do you want to use it? (y/n) " yn
-    case $yn in
-      [Yy]* ) PROJECT_ID=$GOOGLE_CLOUD_PROJECT; break;;
-      [Nn]* )
-        read -p "Please enter the Google Cloud Project ID: " PROJECT_ID
-        break;;
-      * ) echo "Please answer yes or no.";;
-    esac
-  done
-else
-  read -p "Please enter the Google Cloud Project ID: " PROJECT_ID
-fi
-
-PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="csv(projectNumber)" | tail -n 1)
-SERVICE_ACCOUNT=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
-USER_EMAIL=$(gcloud config get-value account)
-
-LOCATION=us-central1
-REPOSITORY=google-marketing-solutions
-DATASET=arba
-IMAGE_NAME=arba
-APP_NAME=arba
-GCS_BASE_PATH=gs://$PROJECT_ID/$APP_NAME
+init_project_id
+init_common_variables
 
 if [[ -n "$GEMINI_API_KEY" ]]; then
   echo "GEMINI_API_KEY is set."
@@ -79,9 +53,6 @@ copy_googleads_config() {
 }
 
 ADS_CONFIG=$GCS_BASE_PATH/google-ads.yaml
-
-
-IMAGE=${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${IMAGE_NAME}
 
 check_required_variables() {
   if [[ -z "$GEMINI_API_KEY" || -z "$ADS_CONFIG" || -z "$ACCOUNT" ]]; then
@@ -152,19 +123,14 @@ set_iam_permissions() {
   done
 }
 
-build() {
-  if gcloud artifacts docker images describe "$IMAGE" --verbosity=none &> /dev/null; then
-    echo "Image $IMAGE already exists. Skipping build."
-  else
-    echo "Building and submitting image to Cloud Build"
-    gcloud builds submit --tag $IMAGE --project $PROJECT_ID
-  fi
-}
-
 deploy() {
   echo "Deploying Cloud Run job"
   gcloud run jobs deploy ${APP_NAME} \
     --image $IMAGE --region $LOCATION  --project $PROJECT_ID \
+    --task-timeout=1h \
+    --max-retries=1 \
+    --cpu=2 \
+    --memory=4Gi \
     --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GEMINI_API_KEY=$GEMINI_API_KEY \
     --args="-d","$DATASET","-l","gcloud","-a","$ACCOUNT","-c","$ADS_CONFIG"
 }
