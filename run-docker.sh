@@ -13,20 +13,20 @@
 # limitations under the License.
 
 usage() {
-    echo "Usage: $0 -d <dataset> -t <tagging_enabled> -l <logger_type>"
+    echo "Usage: $0 -p <project> -d <dataset> -t <tagging_enabled> -l <logger_type>"
     exit 1
 }
 WORKFLOW=/app/workflow-config.yaml
-BQ_PROJECT=mena-youtube-reach-planner
 MIN_COST_SHARE=80
 START_DATE=:YYYYMMDD-31
 END_DATE=:YYYYMMDD-1
 LOG_NAME=arba
 
-while getopts "a:c:d:t:w:l:" opt; do
+while getopts "a:c:p:d:t:w:l:" opt; do
     case $opt in
         a) ACCOUNT="$OPTARG" ;;
         c) ADS_CONFIG="$OPTARG" ;;
+        p) BQ_PROJECT="$OPTARG" ;;
         d) BQ_DATASET="$OPTARG" ;;
         t) TAGGING_ENABLED="$OPTARG" ;;
         w) WORKFLOW="$OPTARG" ;;
@@ -38,6 +38,9 @@ done
 if [ -z "$LOGGER" ]; then
   LOGGER='local'
 fi
+if [ -z "$BQ_PROJECT" ]; then
+  BQ_PROJECT=$GOOGLE_CLOUD_PROJECT
+fi
 if [ -z "$TAGGING_ENABLED" ]; then
   TAGGING_ENABLED=0
 else
@@ -46,7 +49,8 @@ fi
 
 run_bq() {
   local account=$1
-  local dataset=$2
+  local project=$2
+  local dataset=$3
   if [ -z "$dataset" ]; then
     local arba_dataset='arba'
   else
@@ -59,7 +63,7 @@ run_bq() {
     --source.path-to-config=$ADS_CONFIG \
     --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
     --output bq \
-    --bq.project=$BQ_PROJECT --bq.dataset=${arba_dataset}
+    --bq.project=$project --bq.dataset=${arba_dataset}
 
   cd scripts
   python landings_score.py --dataset=${arba_dataset} \
@@ -69,7 +73,7 @@ run_bq() {
     --workflow-include bq_input \
     --logger $LOGGER --log-name $LOG_NAME \
     --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --source.project=$BQ_PROJECT
+    --source.project=$project
 
   garf -w $WORKFLOW \
     --workflow-include tagging \
@@ -77,13 +81,13 @@ run_bq() {
     --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
     --macro.cost_share=$MIN_COST_SHARE \
     --output bq \
-    --bq.project=$BQ_PROJECT --bq.dataset=${arba_dataset} \
-    --source.project=$BQ_PROJECT
+    --bq.project=$project --bq.dataset=${arba_dataset} \
+    --source.project=$project
 
   garf -w $WORKFLOW \
     --workflow-skip googleads,bq_input,empty_bq,tagging \
     --logger $LOGGER --log-name $LOG_NAME \
     --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --source.project=$BQ_PROJECT
+    --source.project=$project
 }
-run_bq $ACCOUNT $BQ_DATASET
+run_bq $ACCOUNT $BQ_PROJECT $BQ_DATASET

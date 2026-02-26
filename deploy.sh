@@ -95,6 +95,7 @@ create_registry() {
   if [[ ! -n $REPO_EXISTS ]]; then
     echo "Creating a repository in Artifact Registry"
     gcloud artifacts repositories create ${REPOSITORY} \
+        --project=$PROJECT_ID \
         --repository-format=docker \
         --location=$LOCATION
     exitcode=$?
@@ -151,32 +152,19 @@ set_iam_permissions() {
   done
 }
 
-create_registry() {
-  REPO_EXISTS=$(gcloud artifacts repositories list --location=$LOCATION --filter="REPOSITORY=projects/'$PROJECT_ID'/locations/'$LOCATION'/repositories/'"$REPOSITORY"'" --format="value(REPOSITORY)" 2>/dev/null)
-  if [[ ! -n $REPO_EXISTS ]]; then
-    echo "Creating a repository in Artifact Registry"
-    gcloud artifacts repositories create ${REPOSITORY} \
-        --repository-format=docker \
-        --location=$LOCATION
-    exitcode=$?
-    if [ $exitcode -ne 0 ]; then
-      echo -e "${RED}[ ! ] Please upgrade Cloud SDK to the latest version: gcloud components update"
-    fi
-  fi
-}
-
 build() {
   if gcloud artifacts docker images describe "$IMAGE" --verbosity=none &> /dev/null; then
     echo "Image $IMAGE already exists. Skipping build."
   else
     echo "Building and submitting image to Cloud Build"
-    gcloud builds submit --tag $IMAGE
+    gcloud builds submit --tag $IMAGE --project $PROJECT_ID
   fi
 }
 
 deploy() {
   echo "Deploying Cloud Run job"
-  gcloud run jobs deploy ${APP_NAME} --image $IMAGE --region $LOCATION \
+  gcloud run jobs deploy ${APP_NAME} \
+    --image $IMAGE --region $LOCATION  --project $PROJECT_ID \
     --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GEMINI_API_KEY=$GEMINI_API_KEY \
     --args="-d","$DATASET","-l","gcloud","-a","$ACCOUNT","-c","$ADS_CONFIG"
 }

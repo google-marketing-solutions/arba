@@ -61,13 +61,7 @@ garf -w workflow-config.yaml
 
 ### Run in Docker
 
-1. Build image
-
-```
-docker build -t arba .
-```
-
-2. Map local files, provide environmental variables and run
+1. Map local files, provide environmental variables and run
 
 ```
 docker run \
@@ -75,7 +69,8 @@ docker run \
   -v /path/to/application_default_credentials.json:/app/service_account.json \
   -e GEMINI_API_KEY=$GEMINI_API_KEY \
   -e GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT \
-  arba -a <GOOGLE_ADS_ACCOUNT> -c /app/google-ads.yaml
+  ghcr.io/google-marketing-solutions/arba:latest \
+  -a <GOOGLE_ADS_ACCOUNT> -c /app/google-ads.yaml
 ```
 
 ### Deploy to Google Cloud
