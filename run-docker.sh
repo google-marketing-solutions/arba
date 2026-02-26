@@ -70,7 +70,7 @@ run_bq() {
     --log-name=$LOG_NAME --logger $LOGGER
   cd ..
   garf -w $WORKFLOW \
-    --workflow-include bq_input \
+    --workflow-include empty_bq,bq_input \
     --logger $LOGGER --log-name $LOG_NAME \
     --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
     --source.project=$project
