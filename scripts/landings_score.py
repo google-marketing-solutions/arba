@@ -16,9 +16,9 @@
 
 """Processes landing pages to find relevance between ads and keywords."""
 
+import json
 import logging
 import os
-import re
 
 import pydantic
 import typer
@@ -28,6 +28,8 @@ from garf.executors.entrypoints import utils as garf_utils
 from garf.io import reader, writer
 from media_tagging import MediaTaggingRequest, MediaTaggingService, repositories
 from typing_extensions import Annotated
+
+logger = logging.getLogger('arba.scripts.landings_score')
 
 app = typer.Typer()
 
@@ -40,7 +42,8 @@ Landing: {landing_url}
 Format the response as a JSON object with the following schema:
 {{
   "score": "<Number from 1 to 10 where 1 means that landing page is completely
-  irrelevant to and 10 is completely relevant>"
+  irrelevant to and 10 is completely relevant>",
+  "reason": "reason behind assigning a particular relevance score"
 }}
 """
 
@@ -49,6 +52,9 @@ class ScoreSchema(pydantic.BaseModel):
   score: int = pydantic.Field(
     description='relevance score between webpage, ad copy and search keywords'
   )
+  reason: str = pydantic.Field(
+    description='reason behind assigning a particular relevance score'
+  )
 
 
 def process_landing(
@@ -56,7 +62,7 @@ def process_landing(
   landing_url: str,
   ads: list[str],
   keywords: list[str],
-) -> int:
+) -> dict[str, str | int]:
   """Processes a single landing to find its relevance to ads and keywords.
 
   Args:
@@ -66,7 +72,7 @@ def process_landing(
     keywords: All keywords associated with a single campaign.
 
   Returns:
-    Score that shows how relevant landing page to ads & keywords.
+    Score that shows how relevant landing page to ads & keywords and the reason.
   """
   prompt = build_prompt(landing_url, ads, keywords)
   result = tagging_service.describe_media(
@@ -82,12 +88,11 @@ def process_landing(
     )
   )
   try:
-    score_raw = result.results[0].content.text[0].get('text')
-    scores_found = re.findall(r'-?\d+', score_raw)
-    score = int(scores_found[0])
+    score_raw = result.results[0].content.text[0].get('text').replace('\n', '')
+    score = json.loads(score_raw)
   except Exception as e:
-    logging.error('Failed to parse score, reason: %s', str(e))
-    score = -1
+    logger.error('Failed to parse score, reason: %s', str(e))
+    score = {'score': -1, 'reason': str(e)}
   return score
 
 
@@ -110,9 +115,9 @@ def main(
     int, typer.Option(help='Number of top spending keywords per campaign')
   ] = 10,
   log_name: Annotated[str, typer.Option(help='Name of logger')] = 'arba',
-  logger: Annotated[str, typer.Option(help='Type of logger')] = 'local',
+  logger_type: Annotated[str, typer.Option(help='Type of logger')] = 'local',
 ) -> None:
-  garf_utils.init_logging(name=log_name, logger_type=logger)
+  garf_utils.init_logging(name=log_name, logger_type=logger_type)
   tagging_service = MediaTaggingService(
     repositories.SqlAlchemyTaggingResultsRepository(
       db_url=os.getenv('ARBA_DB_URI')
@@ -143,10 +148,8 @@ def main(
         bq_writer.write(report, 'landing_page_relevance')
         return
       campaign_id = campaign.get('campaign_id')
-      logging.info(
-        'working on campaign %s for landing %s', campaign_id, landing
-      )
-      logging.info('%d iterations left...', campaigns_to_process)
+      logger.info('working on campaign %s for landing %s', campaign_id, landing)
+      logger.info('%d iterations left...', campaigns_to_process)
 
       score = process_landing(
         tagging_service,
@@ -154,10 +157,13 @@ def main(
         ads=campaign.get('ads'),
         keywords=campaign.get('keywords'),
       )
-      data.append([campaign_id, landing, score])
+      data.append(
+        [campaign_id, landing, score.get('score'), score.get('reason')]
+      )
       campaigns_to_process = campaigns_to_process - 1
   report = GarfReport(
-    results=data, column_names=['campaign_id', 'url', 'relevance_score']
+    results=data,
+    column_names=['campaign_id', 'url', 'relevance_score', 'reason'],
   )
   bq_writer.write(report, 'landing_page_relevance')
   return
