@@ -131,8 +131,8 @@ deploy() {
     --max-retries=1 \
     --cpu=2 \
     --memory=4Gi \
-    --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GEMINI_API_KEY=$GEMINI_API_KEY \
-    --args="-d","$DATASET","-l","gcloud","-a","$ACCOUNT","-c","$ADS_CONFIG"
+    --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GEMINI_API_KEY=$GEMINI_API_KEY,BQ_DATASET=$DATASET,ACCOUNT=$ACCOUNT,ADS_CONFIG=$ADS_CONFIG,START_DATE=:YYYYMMDD-31,END_DATE=:YYYYMMDD-1,MIN_COST_SHARE=80 \
+    --args="-l","gcloud"
 }
 
 enable_telemetry_apis() {

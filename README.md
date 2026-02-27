@@ -73,6 +73,19 @@ docker run \
   -a <GOOGLE_ADS_ACCOUNT> -c /app/google-ads.yaml
 ```
 
+where:
+  * `-a` - Google Ads account(s) or MCC(s)
+  * `-c` - Path to google-ads.yaml
+
+#### Customize
+
+You can provide the following ENV variables to customize `arba` execution.
+
+* `START_DATE` - First date of performance; can be either date (i.e. '2026-01-01') or lookback (`:YYYYMMDD-N`, where N - number of lookback days).
+* `END_DATE` - Last date of performance in the same format as `START_DATE`.
+* `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
+* `GEMINI_API_KEY` - Gemini API key.
+
 ### Deploy to Google Cloud
 
 1. Clone repo in Cloud Shell or on your local machine (we assume Linux with `gcloud` CLI installed):
@@ -92,7 +105,28 @@ git clone https://github.com/google-marketing-solutions/arba.git
 ./deploy.sh
 ```
 
-#### Upgrading Arba
+#### Customize
+
+`arba` is deploy as a Cloud Run job with name `arba`.
+
+You can customize the following options of the job.
+
+In Google Cloud go to `Cloud Run -> Jobs -> arba`, click on `View & edit job configuration`,
+scroll to `Containers, Connection, Security`, select `Variables & Secrets` and
+adjust one of the following ENV variables:
+
+* `BQ_DATASET` - BigQuery dataset where data are saved.
+* `ACCOUNT` - Google Ads account(s) or MCC(s).
+* `ADS_CONFIG` - Path to google-ads.yaml on Google Cloud Storage.
+* `START_DATE` - First date of performance; can be either date (i.e. '2026-01-01') or lookback (`:YYYYMMDD-N`, where N - number of lookback days).
+* `END_DATE` - Last date of performance in the same format as `START_DATE`.
+* `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
+* `GEMINI_API_KEY` - Gemini API key.
+
+By default `arba` is scheduled to run on midnight UTC.
+You can change the schedule in Cloud Scheduler. Locate `arba-scheduler` and define your own schedule.
+
+#### Upgrade
 
 Upgrade make new queries and dependencies available.
 
@@ -100,7 +134,7 @@ Upgrade make new queries and dependencies available.
 ./upgrade.sh
 ```
 
-#### Uninstalling Arba
+#### Uninstall
 
 Uninstall removes Arba Cloud Storage bucker, docker image, Cloud Run Job and Cloud Scheduler only.
 You need to remove BigQuery dataset manually.

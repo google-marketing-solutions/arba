@@ -17,9 +17,6 @@ usage() {
     exit 1
 }
 WORKFLOW=/app/workflow-config.yaml
-MIN_COST_SHARE=80
-START_DATE=:YYYYMMDD-31
-END_DATE=:YYYYMMDD-1
 LOG_NAME=arba
 
 while getopts "a:c:p:d:t:w:l:" opt; do
@@ -35,8 +32,19 @@ while getopts "a:c:p:d:t:w:l:" opt; do
         :) echo "Option -$OPTARG requires an argument." >&2; usage ;;
     esac
 done
+
 if [ -z "$LOGGER" ]; then
   LOGGER='local'
+fi
+if [ -z "$START_DATE" ]; then
+  START_DATE=:YYYYMMDD-31
+fi
+
+if [ -z "$END_DATE" ]; then
+  END_DATE=:YYYYMMDD-1
+fi
+if [ -z "$MIN_COST_SHARE" ]; then
+  MIN_COST_SHARE=80
 fi
 if [ -z "$BQ_PROJECT" ]; then
   BQ_PROJECT=$GOOGLE_CLOUD_PROJECT
