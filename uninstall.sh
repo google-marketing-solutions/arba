@@ -25,7 +25,7 @@ delete_image() {
 }
 
 delete_googleads_config() {
-  gsutil rm -rf $GCS_BASE_PATH
+  gcloud storage rm --recursive --continue-on-error $GCS_BASE_PATH
 
 }
 remove_job() {

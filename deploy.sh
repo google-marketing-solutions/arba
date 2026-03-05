@@ -38,15 +38,15 @@ fi
 read -p "Please enter the Google Ads Account: " ACCOUNT
 
 copy_googleads_config() {
-  if ! gsutil ls gs://$PROJECT_ID > /dev/null 2> /dev/null; then
+  if ! gcloud storage ls gs://$PROJECT_ID > /dev/null 2> /dev/null; then
     echo "Creating GCS bucket gs://$PROJECT_ID"
-    gsutil mb -b on gs://$PROJECT_ID
+    gcloud storage buckets create --uniform-bucket-level-access gs://$PROJECT_ID
   fi
   echo 'Copying google-ads.yaml to GCS'
   if [[ -f ./google-ads.yaml ]]; then
-    gsutil -h "Content-Type:text/plain" cp ./google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
+    gcloud storage cp --content-type="text/plain" ./google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
   elif [[ -f $HOME/google-ads.yaml ]]; then
-    gsutil -h "Content-Type:text/plain" cp $HOME/google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
+    gcloud storage cp --content-type="text/plain" $HOME/google-ads.yaml $GCS_BASE_PATH/google-ads.yaml
   else
     echo "Please upload google-ads.yaml"
   fi
