@@ -57,12 +57,12 @@ RollingCalculation AS (
       PARTITION BY campaign_id
       ORDER BY date DESC
       ROWS BETWEEN CURRENT ROW AND 6 FOLLOWING
-    ) AS search_top_impression_share_last_week,
+    ) AS top_impression_share_last_week,
     AVG(search_top_impression_share) OVER (
       PARTITION BY campaign_id
       ORDER BY date DESC
       ROWS BETWEEN 7 FOLLOWING AND 13 FOLLOWING
-    ) AS search_top_impression_share_week_before,
+    ) AS top_impression_share_week_before,
     ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY date DESC) AS rn
   FROM CampaignAggregated
 )

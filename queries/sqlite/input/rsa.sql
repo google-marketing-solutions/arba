@@ -26,19 +26,20 @@ WITH AdGroupAds AS (
   ORDER BY cost DESC
 ),
 ProcessedCta AS (
-  SELECT DISTINCT
+  SELECT
     ad,
-    ANY_VALUE(has_cta) AS has_cta
+    MIN(has_cta) AS has_cta
   FROM cta
   GROUP BY 1
 ),
 ProcessedUsp AS (
-  SELECT DISTINCT
+  SELECT
     ad,
-    ANY_VALUE(has_usp) AS has_usp
+    MIN(has_usp) AS has_usp
   FROM usp
   GROUP BY 1
 ),
+Positions AS (
 SELECT
   AGA.ad_group_ad_id,
   AGA.ad,

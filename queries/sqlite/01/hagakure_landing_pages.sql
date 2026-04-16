@@ -35,6 +35,8 @@ SELECT
   account_id,
   account_name,
   final_urls AS landing_page,
+  GROUP_CONCAT(DISTINCT campaign_name) AS campaigns,
+  COUNT(DISTINCT campaign_name) AS campaigns_count,
   GROUP_CONCAT(DISTINCT ad_group_id) AS ad_groups,
   GROUP_CONCAT(DISTINCT ad_group_name) AS ad_groups_names,
   COUNT(DISTINCT ad_group_id) > 1 AS requiring_attention,

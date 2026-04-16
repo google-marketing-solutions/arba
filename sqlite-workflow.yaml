@@ -59,7 +59,7 @@ steps:
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS landing_page_relevance AS
-              SELECT 0 AS campaign_id, '' AS url, 0.0 AS relevance_score
+              SELECT 0 AS campaign_id, '' AS url, 0.0 AS relevance_score, '' AS reason
               LIMIT 0;
           title: empty_landing_page_relevance
       - query:
