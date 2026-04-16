@@ -75,7 +75,7 @@ run_bq() {
 
   cd scripts
   python landings_score.py --dataset=${arba_dataset} \
-    --log-name=$LOG_NAME --logger $LOGGER
+    --log-name=$LOG_NAME --logger-type $LOGGER
   cd ..
   garf -w $WORKFLOW \
     --workflow-include empty_bq,bq_input \

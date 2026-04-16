@@ -35,7 +35,7 @@ fetcher_section: &google_defaults
       WHERE campaign.advertising_channel_type = SEARCH
 bq_section: &bq_defaults
   fetcher_parameters:
-    project_id: *bq_project
+    project: *bq_project
 google-ads_macro_section: &g_macros
   query_parameters:
     macro:
@@ -65,7 +65,7 @@ steps:
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS `{dataset}.landing_page_relevance` AS (
-              SELECT 0 AS campaign_id, "" AS url, 0.0 AS relevance_score
+              SELECT 0 AS campaign_id, "" AS url, 0.0 AS relevance_score, "" AS reason
               LIMIT 0
             );
           title: empty_landing_page_relevance
