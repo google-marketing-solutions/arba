@@ -36,6 +36,9 @@ CREATE OR REPLACE TABLE `{target_dataset}.hagakure_landing_pages` AS (
     account_id,
     account_name,
     final_urls AS landing_page,
+    STRING_AGG(DISTINCT CAST(campaign_name AS STRING),"\n") AS campaigns,
+    ARRAY_LENGTH(ARRAY_AGG(DISTINCT CAST(campaign_name AS STRING)))
+      AS campaigns_count,
     STRING_AGG(DISTINCT CAST(ad_group_id AS STRING),"\n") AS ad_groups,
     STRING_AGG(DISTINCT CAST(ad_group_name AS STRING),"\n") AS ad_groups_names,
     COUNT(DISTINCT ad_group_id) > 1 AS requiring_attention,
