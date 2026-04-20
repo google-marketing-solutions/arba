@@ -65,32 +65,23 @@ run_bq() {
     local arba_dataset=${dataset}
   fi
   garf -w $WORKFLOW \
-    --workflow-include googleads \
+    --workflow-include googleads,empty_bq,bq_input \
     --logger $LOGGER --log-name $LOG_NAME \
     --source.account=$account \
     --source.path-to-config=$ADS_CONFIG \
     --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
     --output bq \
-    --bq.project=$project --bq.dataset=${arba_dataset}
+    --bq.project=$project --bq.dataset=${arba_dataset} \
+    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
+    --source.project=$project
 
   cd scripts
   python landings_score.py --dataset=${arba_dataset} \
     --log-name=$LOG_NAME --logger-type $LOGGER
+  python ad_copy_score.py --dataset=${arba_dataset} \
+    --cost-share=$MIN_COST_SHARE \
+    --log-name=$LOG_NAME --logger-type $LOGGER
   cd ..
-  garf -w $WORKFLOW \
-    --workflow-include empty_bq,bq_input \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --source.project=$project
-
-  garf -w $WORKFLOW \
-    --workflow-include tagging \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --macro.cost_share=$MIN_COST_SHARE \
-    --output bq \
-    --bq.project=$project --bq.dataset=${arba_dataset} \
-    --source.project=$project
 
   garf -w $WORKFLOW \
     --workflow-skip googleads,bq_input,empty_bq,tagging \

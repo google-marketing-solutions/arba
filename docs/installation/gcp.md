@@ -63,6 +63,20 @@ You can change the schedule in Cloud Scheduler. Locate `arba-scheduler` and defi
 
 Upgrade makes new queries and dependencies available.
 
+If your BigQuery dataset already contains `cta` and `usp` tables from an older
+version of Arba, add the new columns once before running the upgraded job:
+
+```sql
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.cta`
+ADD COLUMN cta_strength INT64,
+ADD COLUMN cta_type STRING;
+
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.usp`
+ADD COLUMN usp_type STRING,
+ADD COLUMN usp_strength INT64,
+ADD COLUMN suggestion STRING;
+```
+
 ```bash
 ./upgrade.sh
 ```

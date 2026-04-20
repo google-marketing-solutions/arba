@@ -142,9 +142,9 @@ ds.campaign_performance.type=TABLE&
 ds.campaign_performance.datasetId=YOUR_DATASET_ID&
 ds.campaign_performance.tableId=campaign_performance&
 
-ds.campaign_performance.connector=bigQuery&
-ds.campaign_performance.datasourceName=speed_score&
-ds.campaign_performance.projectId=YOUR_PROJECT_ID&
-ds.campaign_performance.type=TABLE&
-ds.campaign_performance.datasetId=YOUR_DATASET_ID&
-ds.campaign_performance.tableId=speed_score
+ds.speed_score.connector=bigQuery&
+ds.speed_score.datasourceName=speed_score&
+ds.speed_score.projectId=YOUR_PROJECT_ID&
+ds.speed_score.type=TABLE&
+ds.speed_score.datasetId=YOUR_DATASET_ID&
+ds.speed_score.tableId=speed_score

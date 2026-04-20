@@ -30,6 +30,9 @@ done
 if [ -z "$LOGGER" ]; then
   LOGGER='rich'
 fi
+if [ -z "$MIN_COST_SHARE" ]; then
+  MIN_COST_SHARE=80
+fi
 if [ -z "$TAGGING_ENABLED" ]; then
   TAGGING_ENABLED=0
 else
@@ -39,12 +42,13 @@ fi
 tag_landing_pages() {
   cd scripts
   python landings_score.py --dataset=$BQ_DATASET
+  python ad_copy_score.py --dataset=$BQ_DATASET --cost-share=$MIN_COST_SHARE
   cd ..
 }
 if [[ $TAGGING_ENABLED -eq 1 ]]; then
-  garf -w $WORKFLOW --workflow-include googleads --logger $LOGGER
+  garf -w $WORKFLOW --workflow-include googleads,empty_bq,bq_input --logger $LOGGER
   tag_landing_pages
-  garf -w $WORKFLOW --workflow-skip googleads,empty_bq --logger $LOGGER
+  garf -w $WORKFLOW --workflow-skip googleads,empty_bq,bq_input,tagging --logger $LOGGER
 else
-  garf -w $WORKFLOW
+  garf -w $WORKFLOW --workflow-skip tagging
 fi

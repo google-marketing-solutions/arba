@@ -29,14 +29,19 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   DedupUsp AS (
     SELECT
       ad,
-      ANY_VALUE(has_usp) AS has_usp
+      ANY_VALUE(has_usp) AS has_usp,
+      ANY_VALUE(usp_type) AS usp_type,
+      ANY_VALUE(usp_strength) AS usp_strength,
+      ANY_VALUE(suggestion) AS usp_suggestion
     FROM `{dataset}.usp`
     GROUP BY 1
   ),
   DedupCta AS (
     SELECT
       ad,
-      ANY_VALUE(has_cta) AS has_cta
+      ANY_VALUE(has_cta) AS has_cta,
+      ANY_VALUE(cta_strength) AS cta_strength,
+      ANY_VALUE(cta_type) AS cta_type
     FROM `{dataset}.cta`
     GROUP BY 1
   )
@@ -45,7 +50,12 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
     IFNULL(LPR.relevance_score, -1) AS relevance_score,
     IFNULL(LPR.relevance_score_reason, 'Unknown') AS relevance_score_reason,
     U.has_usp,
+    U.usp_type,
+    U.usp_strength,
+    U.usp_suggestion,
     C.has_cta,
+    C.cta_strength,
+    C.cta_type,
     REGEXP_CONTAINS(LOWER(RI.ad), 'keyword:') AS has_dki
   FROM `{dataset}.ad_group_ad` AS AGA
   LEFT JOIN LandingPageRelevance AS LPR
@@ -53,7 +63,7 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   LEFT JOIN `{target_dataset}.rsa_input` AS RI
     USING (ad_group_ad_id)
   LEFT JOIN DedupUsp AS U
-    USING (ad)
+    ON U.ad = REGEXP_REPLACE(CONCAT(AGA.headlines, '|', AGA.descriptions), r'[(),]', '')
   LEFT JOIN DedupCta AS C
-    USING (ad)
+    ON C.ad = REGEXP_REPLACE(CONCAT(AGA.headlines, '|', AGA.descriptions), r'[(),]', '')
 );
