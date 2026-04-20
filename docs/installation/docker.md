@@ -44,3 +44,17 @@ You can provide the following Environment variables to customize `arba` executio
 * `END_DATE` - Last date of performance in the same format as `START_DATE`.
 * `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
 * `GEMINI_API_KEY` - Gemini API key.
+
+If your BigQuery dataset already contains `cta` and `usp` tables from an older
+version of Arba, add the new columns once before running the upgraded image:
+
+```sql
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.cta`
+ADD COLUMN cta_strength INT64,
+ADD COLUMN cta_type STRING;
+
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.usp`
+ADD COLUMN usp_type STRING,
+ADD COLUMN usp_strength INT64,
+ADD COLUMN suggestion STRING;
+```
