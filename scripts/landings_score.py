@@ -68,8 +68,8 @@ def process_landing(
   Args:
     tagging_service: Service for processing ads, landings, keywords.
     landing_url: Url to process.
-    ads: All ads associated with a single campaign.
-    keywords: All keywords associated with a single campaign.
+    ads: All ads associated with a single ad_group.
+    keywords: All keywords associated with a single ad_group.
 
   Returns:
     Score that shows how relevant landing page to ads & keywords and the reason.
@@ -108,11 +108,11 @@ def build_prompt(landing_url: str, ads: list[str], keywords: list[str]) -> str:
 @app.command()
 def main(
   dataset: Annotated[str, typer.Option(help='Dataset name')] = 'arba',
-  campaigns_to_process: Annotated[
-    int, typer.Option(help='Number of top campaigns sorted by cost')
+  ad_groups_to_process: Annotated[
+    int, typer.Option(help='Number of top ad_groups sorted by cost')
   ] = 10,
-  keywords_per_campaign: Annotated[
-    int, typer.Option(help='Number of top spending keywords per campaign')
+  keywords_per_ad_group: Annotated[
+    int, typer.Option(help='Number of top spending keywords per ad_group')
   ] = 10,
   log_name: Annotated[str, typer.Option(help='Name of logger')] = 'arba',
   logger_type: Annotated[str, typer.Option(help='Type of logger')] = 'local',
@@ -128,8 +128,8 @@ def main(
   query = reader.FileReader().read(query_path='./landings.sql')
   query = query.format(
     dataset=dataset,
-    top_n_campaigns=campaigns_to_process,
-    top_n_keywords=keywords_per_campaign,
+    top_n_ad_groups=ad_groups_to_process,
+    top_n_keywords=keywords_per_ad_group,
   )
   landings = bq_executor.execute(
     query=query,
@@ -138,31 +138,31 @@ def main(
 
   data = []
   bq_writer = writer.create_writer('bq', dataset=dataset)
-  campaigns_to_process = min(campaigns_to_process, len(landings))
-  report_column_names = ['campaign_id', 'url', 'relevance_score', 'reason']
+  ad_groups_to_process = min(ad_groups_to_process, len(landings))
+  report_column_names = ['ad_group_id', 'url', 'relevance_score', 'reason']
   for landing, items in landings.to_dict('url').items():
-    for campaign in items:
-      if campaigns_to_process < 0:
+    for ad_group in items:
+      if ad_groups_to_process < 0:
         report = GarfReport(
           results=data,
           column_names=report_column_names,
         )
         bq_writer.write(report, 'landing_page_relevance')
         return
-      campaign_id = campaign.get('campaign_id')
-      logger.info('working on campaign %s for landing %s', campaign_id, landing)
-      logger.info('%d iterations left...', campaigns_to_process)
+      ad_group_id = ad_group.get('ad_group_id')
+      logger.info('working on ad_group %s for landing %s', ad_group_id, landing)
+      logger.info('%d iterations left...', ad_groups_to_process)
 
       score = process_landing(
         tagging_service,
         landing,
-        ads=campaign.get('ads'),
-        keywords=campaign.get('keywords'),
+        ads=ad_group.get('ads'),
+        keywords=ad_group.get('keywords'),
       )
       data.append(
-        [campaign_id, landing, score.get('score'), score.get('reason')]
+        [ad_group_id, landing, score.get('score'), score.get('reason')]
       )
-      campaigns_to_process = campaigns_to_process - 1
+      ad_groups_to_process = ad_groups_to_process - 1
   report = GarfReport(
     results=data,
     column_names=report_column_names,

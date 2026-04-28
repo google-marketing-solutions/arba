@@ -20,11 +20,12 @@
 CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   WITH LandingPageRelevance AS (
     SELECT
-      campaign_id,
+      ad_group_id,
+      url,
       ANY_VALUE(reason) AS relevance_score_reason,
       MIN(relevance_score) AS relevance_score
     FROM `{dataset}.landing_page_relevance`
-    GROUP BY 1
+    GROUP BY 1, 2
   ),
   DedupUsp AS (
     SELECT
@@ -42,6 +43,7 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   )
   SELECT
     AGA.*,
+    IFNULL(LPR.url, '') AS landing_page,
     IFNULL(LPR.relevance_score, -1) AS relevance_score,
     IFNULL(LPR.relevance_score_reason, 'Unknown') AS relevance_score_reason,
     U.has_usp,
@@ -49,7 +51,7 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
     REGEXP_CONTAINS(LOWER(RI.ad), 'keyword:') AS has_dki
   FROM `{dataset}.ad_group_ad` AS AGA
   LEFT JOIN LandingPageRelevance AS LPR
-    USING (campaign_id)
+    USING (ad_group_id)
   LEFT JOIN `{target_dataset}.rsa_input` AS RI
     USING (ad_group_ad_id)
   LEFT JOIN DedupUsp AS U

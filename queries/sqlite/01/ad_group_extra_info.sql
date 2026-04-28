@@ -19,11 +19,12 @@ DROP TABLE IF EXISTS ad_group_extra_info;
 CREATE TABLE ad_group_extra_info AS
 WITH LandingPageRelevance AS (
   SELECT
-    campaign_id,
+    ad_group_id,
+    url,
     MIN(reason) AS relevance_score_reason,
     MIN(relevance_score) AS relevance_score
   FROM landing_page_relevance
-  GROUP BY 1
+  GROUP BY 1, 2
 ),
 DedupUsp AS (
   SELECT
@@ -41,6 +42,7 @@ DedupCta AS (
 )
 SELECT
   AGA.*,
+  IFNULL(LPR.url, '') AS landing_page,
   IFNULL(LPR.relevance_score, -1) AS relevance_score,
   IFNULL(LPR.relevance_score_reason, 'Unknown') AS relevance_score_reason,
   IFNULL(U.has_usp, -1) AS has_usp,
@@ -48,7 +50,7 @@ SELECT
   LOWER(RI.ad) LIKE '%keyword:%' AS has_dki
 FROM ad_group_ad AS AGA
 LEFT JOIN LandingPageRelevance AS LPR
-  USING (campaign_id)
+  USING (ad_group_id)
 LEFT JOIN rsa_input AS RI
   USING (ad_group_ad_id)
 LEFT JOIN DedupUsp AS U

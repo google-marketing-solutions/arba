@@ -16,22 +16,22 @@ limitations under the License.
 -- Fetches unique final_urls.
 
 -- @param dataset BigQuery dataset where Google Ads data are stored.
--- @param top_n_campaigns Number of top campaigns to process.
+-- @param top_ad_groups Number of top campaigns to process.
 -- @param top_n_keywords Number of top keywords to get from each campaign.
 
 WITH
-  TopCampaigns AS (
+  TopAdGroups AS (
     SELECT
-      campaign_id,
+      ad_group_id,
       SUM(cost) AS cost
     FROM `{dataset}.landing_pages`
     GROUP BY 1
     ORDER BY cost DESC
-    LIMIT {top_n_campaigns}
+    LIMIT {top_n_ad_groups}
   ),
   KeywordCost AS (
     SELECT
-      AGM.campaign_id,
+      KP.ad_group_id,
       KM.keyword,
       SUM(KP.cost) AS cost
     FROM `{dataset}.keyword_performance` AS KP
@@ -42,46 +42,46 @@ WITH
         AND AGM.account_id = KM.account_id
     GROUP BY 1, 2
   ),
-  TopCampaignKeywords AS (
+  TopAdGroupKeywords AS (
     SELECT
-      campaign_id,
+      ad_group_id,
       keyword,
       ROW_NUMBER() OVER(
-        PARTITION BY campaign_id
+        PARTITION BY ad_group_id
         ORDER BY cost
       ) AS keyword_rank
     FROM KeywordCost
   ),
   Keywords AS (
     SELECT
-      TCK.campaign_id,
-      ARRAY_AGG(TCK.keyword) AS keywords
-    FROM TopCampaignKeywords AS TCK
-    INNER JOIN TopCampaigns USING (campaign_id)
-    WHERE TCK.keyword_rank <= {top_n_keywords}
+      TAGK.ad_group_id,
+      ARRAY_AGG(TAGK.keyword) AS keywords
+    FROM TopAdGroupKeywords AS TAGK
+    INNER JOIN TopAdGroups USING (ad_group_id)
+    WHERE TAGK.keyword_rank <= {top_n_keywords}
     GROUP BY 1
   ),
   Ads AS (
     SELECT
-      AGA.campaign_id,
+      AGA.ad_group_id,
       ARRAY_AGG(AGA.headlines) AS headlines,
       ARRAY_AGG(AGA.descriptions) AS descriptions
     FROM `{dataset}.ad_group_ad` AS AGA
-    INNER JOIN TopCampaigns USING (campaign_id)
+    INNER JOIN TopAdGroups USING (ad_group_id)
     GROUP BY 1
   ),
   Landings AS (
     SELECT DISTINCT
-      LP.campaign_id,
+      LP.ad_group_id,
       LP.final_urls AS url
     FROM `{dataset}.landing_pages` AS LP
-    INNER JOIN TopCampaigns USING (campaign_id)
+    INNER JOIN TopAdGroups USING (ad_group_id)
   )
 SELECT
-  L.campaign_id,
+  L.ad_group_id,
   L.url,
   K.keywords,
   ARRAY_CONCAT(A.headlines, A.descriptions) AS ads
 FROM Landings AS L
-LEFT JOIN Keywords AS K USING (campaign_id)
-LEFT JOIN Ads AS A USING (campaign_id);
+LEFT JOIN Keywords AS K USING (ad_group_id)
+LEFT JOIN Ads AS A USING (ad_group_id);
