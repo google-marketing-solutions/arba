@@ -72,13 +72,24 @@ steps:
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS `{dataset}.usp` AS (
-              SELECT "" AS ad, TRUE AS has_usp LIMIT 0
+              SELECT
+                "" AS ad,
+                TRUE AS has_usp,
+                "" AS usp_type,
+                0 AS usp_strength,
+                "" AS suggestion
+              LIMIT 0
             );
           title: empty_usp
       - query:
           text: |
             CREATE TABLE IF NOT EXISTS `{dataset}.cta` AS (
-              SELECT "" AS ad, TRUE AS has_cta LIMIT 0
+              SELECT
+                "" AS ad,
+                TRUE AS has_cta,
+                0 AS cta_strength,
+                "" AS cta_type
+              LIMIT 0
             );
           title: empty_cta
 

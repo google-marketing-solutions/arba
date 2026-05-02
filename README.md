@@ -35,6 +35,20 @@ Looker Studio [dashboard](https://lookerstudio.google.com/c/reporting/c575864a-9
 
 ### Run locally
 
+If your BigQuery dataset already contains `cta` and `usp` tables created by an
+older version of Arba, add the new columns once before upgrading:
+
+```sql
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.cta`
+ADD COLUMN cta_strength INT64,
+ADD COLUMN cta_type STRING;
+
+ALTER TABLE `YOUR_PROJECT.YOUR_DATASET.usp`
+ADD COLUMN usp_type STRING,
+ADD COLUMN usp_strength INT64,
+ADD COLUMN suggestion STRING;
+```
+
 
 1. Install dependencies
 
