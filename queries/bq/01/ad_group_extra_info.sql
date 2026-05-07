@@ -27,6 +27,15 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
     FROM `{dataset}.landing_page_relevance`
     GROUP BY 1, 2
   ),
+  RSAInput AS (
+    SELECT
+      ad_group_ad_id,
+      REGEXP_REPLACE(CONCAT(headlines, '|', descriptions), r'[(),]', '') AS ad,
+      SUM(cost) AS cost,
+    FROM `{dataset}.ad_group_ad`
+    GROUP BY ALL
+    HAVING cost > 0
+  ),
   DedupUsp AS (
     SELECT
       ad,
@@ -52,7 +61,7 @@ CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
   FROM `{dataset}.ad_group_ad` AS AGA
   LEFT JOIN LandingPageRelevance AS LPR
     USING (ad_group_id)
-  LEFT JOIN `{target_dataset}.rsa_input` AS RI
+  LEFT JOIN RSAInput AS RI
     USING (ad_group_ad_id)
   LEFT JOIN DedupUsp AS U
     USING (ad)
