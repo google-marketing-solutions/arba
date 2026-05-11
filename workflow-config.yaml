@@ -107,7 +107,7 @@ steps:
           FROM `{dataset}.rsa_input`
           WHERE
             cost_share < {cost_share}
-            OR ad_position <= {max_results};
+            AND ad_position <= {max_results};
         dataset: *bq_dataset
         cost_share: 80
         max_results: 100
