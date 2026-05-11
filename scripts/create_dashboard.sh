@@ -43,9 +43,16 @@ case $1 in
 	shift
 done
 
-	link=`cat $(dirname $0)/linking_api.http | sed "s/REPORT_ID/$report_id/; s/REPORT_NAME/$report_name/; s/YOUR_PROJECT_ID/$project_id/g; s/YOUR_DATASET_ID/$dataset_id/g" | sed '/^$/d;' | tr -d '\n'`
+link=`cat $(dirname $0)/linking_api.http | sed "s/REPORT_ID/$report_id/; s/REPORT_NAME/$report_name/; s/YOUR_PROJECT_ID/$project_id/g; s/YOUR_DATASET_ID/$dataset_id/g" | sed '/^$/d;' | tr -d '\n'`
+
 if [ $return_link -eq 1 ]; then
-  echo "$link"
+  echo "Click on the link to create a dashboard\n: $link"
+elif command -v xdg-open &> /dev/null; then
+    xdg-open "$URL" &> /dev/null
+elif command -v open &> /dev/null; then
+  open "$link" &> /dev/null
+elif command -v start &> /dev/null; then
+  start "$link" &> /dev/null
 else
-  open "$link"
+  echo "Click on the link to create a dashboard\n: $link"
 fi
