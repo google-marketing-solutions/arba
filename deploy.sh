@@ -112,7 +112,11 @@ enable_apis() {
 }
 
 set_iam_permissions() {
-  required_roles="run.invoker run.admin iam.serviceAccountUser"
+  required_roles=("run.invoker run.admin iam.serviceAccountUser
+    storage.objectAdmin storage.objectViewer
+    logging.logWriter artifactregistry.reader artifactregistry.writer
+    iam.serviceAccountTokenCreator cloudscheduler.jobRunner"
+  )
   echo "Setting up IAM permissions"
   for role in $required_roles; do
     gcloud projects add-iam-policy-binding $PROJECT_ID \
