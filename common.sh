@@ -60,7 +60,7 @@ init_common_variables() {
 
 build() {
   echo "Building and submitting image to Cloud Build"
-  gcloud builds submit --tag $IMAGE --project $PROJECT_ID --gcs-log-dir=gs://${GCS_BASE_PATH}/logs
+  gcloud builds submit --tag $IMAGE --project $PROJECT_ID --gcs-log-dir=gs://$PROJECT_ID/$APP_NAME/logs
 }
 
 check_installation() {
