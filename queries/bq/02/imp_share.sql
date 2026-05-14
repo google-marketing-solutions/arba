@@ -35,5 +35,5 @@ CREATE OR REPLACE TABLE `{target_dataset}.imp_share` AS (
     date > CAST(CURRENT_DATE()-8 AS STRING)
     AND date < CAST(CURRENT_DATE() AS STRING)
   GROUP BY ALL
-  HAVING impression_share < 0.1
+  HAVING impression_share < 0.9
 );

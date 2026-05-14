@@ -41,4 +41,4 @@ GROUP BY
   ad_group_id,
   ad_group_name,
   keyword
-HAVING impression_share < 0.1;
+HAVING impression_share < 0.9;
