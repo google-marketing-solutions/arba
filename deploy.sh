@@ -113,7 +113,7 @@ enable_apis() {
 
 set_iam_permissions() {
   required_roles=("run.invoker run.admin iam.serviceAccountUser
-    storage.objectAdmin storage.objectViewer storage.admin
+    storage.objectAdmin storage.objectViewer storage.admin bigquery.admin
     logging.logWriter artifactregistry.reader artifactregistry.writer
     iam.serviceAccountTokenCreator cloudscheduler.jobRunner"
   )
