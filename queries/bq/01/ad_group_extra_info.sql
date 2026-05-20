@@ -18,14 +18,24 @@
 -- @param dataset BigQuery dataset where Google Ads data are stored.
 
 CREATE OR REPLACE TABLE `{target_dataset}.ad_group_extra_info` AS (
-  WITH LandingPageRelevance AS (
+  WITH LandingPageRelevanceInput AS (
     SELECT
       ad_group_id,
       url,
+      ROW_NUMBER() OVER (PARTITION BY ad_group_id ORDER BY MIN(CAST(relevance_score AS INT64))) AS rn,
       ANY_VALUE(reason) AS relevance_score_reason,
-      MIN(relevance_score) AS relevance_score
-    FROM `{dataset}.landing_page_relevance`
+      MIN(CAST(relevance_score AS INT64)) AS relevance_score
+    FROM `{target_dataset}.landing_page_relevance`
     GROUP BY 1, 2
+  ),
+  LandingPageRelevance AS (
+    SELECT
+      ad_group_id,
+      url,
+      relevance_score_reason,
+      relevance_score
+    FROM LandingPageRelevanceInput
+    WHERE rn <= 1
   ),
   RSAInput AS (
     SELECT
