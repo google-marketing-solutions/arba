@@ -31,21 +31,21 @@ CREATE OR REPLACE TABLE `{target_dataset}.rsa_input` AS (
     SELECT DISTINCT
       ad,
       ANY_VALUE(has_cta) AS has_cta
-    FROM `{dataset}.cta`
+    FROM `{target_dataset}.cta`
     GROUP BY 1
   ),
   ProcessedUsp AS (
     SELECT DISTINCT
       ad,
       ANY_VALUE(has_usp) AS has_usp
-    FROM `{dataset}.usp`
+    FROM `{target_dataset}.usp`
     GROUP BY 1
   ),
   Positions AS (
     SELECT
       AGA.ad_group_ad_id,
       AGA.ad,
-      ROW_NUMBER() OVER() AS position,
+      ROW_NUMBER() OVER(ORDER BY AGA.cost DESC) AS position,
       AGA.cost,
       PC.has_cta IS NULL AS unprocessed_cta,
       PU.has_usp IS NULL AS unprocessed_usp

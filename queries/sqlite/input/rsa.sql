@@ -43,7 +43,7 @@ Positions AS (
 SELECT
   AGA.ad_group_ad_id,
   AGA.ad,
-  ROW_NUMBER() OVER() AS position,
+  ROW_NUMBER() OVER(ORDER BY AGA.cost DESC) AS position,
   AGA.cost,
   PC.has_cta IS NULL AS unprocessed_cta,
   PU.has_usp IS NULL AS unprocessed_usp
