@@ -15,7 +15,6 @@
 -- Identifies whether provided ads has Unique Selling Point in them.
 
 -- @param ads Text ads.
-
 SELECT
   identifier AS ad,
   content.text AS has_usp
@@ -24,5 +23,9 @@ WHERE
   tagger.custom_prompt = "Assess the following text assets if there's any unique selling point in them."
   AND media_type = TEXT
   AND tagger_type = "gemini"
-  AND media_paths IN ({ads})
+  AND media_paths IN (
+    {% for ad in ads -%}
+      {{ ad.ad }}{% if not loop.last %}, {% endif %}
+    {%- endfor %}
+  )
   AND tagging_options.custom_schema = 'boolean'
