@@ -50,8 +50,6 @@ if [ -z "$BQ_PROJECT" ]; then
   BQ_PROJECT=$GOOGLE_CLOUD_PROJECT
 fi
 if [ -z "$TAGGING_ENABLED" ]; then
-  TAGGING_ENABLED=0
-else
   TAGGING_ENABLED=1
 fi
 
@@ -64,18 +62,27 @@ run_bq() {
   else
     local arba_dataset=${dataset}
   fi
-  ARGS=(-f $WORKFLOW \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --google-ads.account=$account \
-    --google-ads.path-to-config=$ADS_CONFIG \
-    --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --template.dataset=${arba_dataset} --template.target_dataset=${arba_dataset} \
-    --bq.project=$project --bq.dataset=${arba_dataset} \
-    --bq.target_dataset=${arba_dataset})
-  if [[ $TAGGING_ENABLED -eq 0 ]]; then
-    ARGS+=(--exclude langing_page_relevance,tagging)
+  if [[ $TAGGING_ENABLED -eq 1 ]]; then
+    grf workflow run -f $WORKFLOW \
+      --logger $LOGGER --log-name $LOG_NAME \
+      --google-ads.account=$account \
+      --google-ads.path-to-config=$ADS_CONFIG \
+      --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
+      --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
+      --template.dataset=${arba_dataset} --template.target_dataset=${arba_dataset} \
+      --bq.project=$project --bq.dataset=${arba_dataset} \
+      --bq.target_dataset=${arba_dataset}
+  else
+    grf workflow run -f $WORKFLOW \
+      --exclude landing_page_relevance,tagging \
+      --logger $LOGGER --log-name $LOG_NAME \
+      --google-ads.account=$account \
+      --google-ads.path-to-config=$ADS_CONFIG \
+      --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
+      --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
+      --template.dataset=${arba_dataset} --template.target_dataset=${arba_dataset} \
+      --bq.project=$project --bq.dataset=${arba_dataset} \
+      --bq.target_dataset=${arba_dataset}
   fi
-  grf workflow run "${ARGS[@]}"
 }
 run_bq $ACCOUNT $BQ_PROJECT $BQ_DATASET

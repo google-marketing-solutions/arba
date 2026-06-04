@@ -40,5 +40,11 @@ pip install -r requirements.txt
 2.  Run the following command to start generating data:
 
 ```
-garf -w workflow-config.yaml
+grf workflow run -f workflow-config.yaml
 ```
+!!!note
+    Search keywords and ads processing via Gemini enabled by default.
+    You can disable it at runtime.
+    ```
+    grf workflow run -f workflow-config.yaml --exclude landing_page_relevance,tagging
+    ```

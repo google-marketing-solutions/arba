@@ -31,8 +31,6 @@ if [ -z "$LOGGER" ]; then
   LOGGER='rich'
 fi
 if [ -z "$TAGGING_ENABLED" ]; then
-  TAGGING_ENABLED=0
-else
   TAGGING_ENABLED=1
 fi
 
