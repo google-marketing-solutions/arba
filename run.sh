@@ -31,20 +31,13 @@ if [ -z "$LOGGER" ]; then
   LOGGER='rich'
 fi
 if [ -z "$TAGGING_ENABLED" ]; then
-  TAGGING_ENABLED=0
-else
   TAGGING_ENABLED=1
 fi
 
-tag_landing_pages() {
-  cd scripts
-  python landings_score.py --dataset=$BQ_DATASET
-  cd ..
-}
 if [[ $TAGGING_ENABLED -eq 1 ]]; then
-  garf -w $WORKFLOW --workflow-include googleads --logger $LOGGER
-  tag_landing_pages
-  garf -w $WORKFLOW --workflow-skip googleads,empty_bq --logger $LOGGER
+  grf workflow run -f $WORKFLOW \
+    --logger $LOGGER
 else
-  garf -w $WORKFLOW
+  grf workflow run -f $WORKFLOW --exclude landing_page_relevance,tagging \
+    --logger $LOGGER
 fi

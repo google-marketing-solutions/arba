@@ -32,6 +32,10 @@ Looker Studio [dashboard](https://lookerstudio.google.com/c/reporting/c575864a-9
     export GOOGLE_CLOUD_PROJECT=<YOUR_PROJECT_HERE>
     ```
 
+> [!IMPORTANT]
+> Search keywords and ads processing via Gemini enabled by default.
+> You can disable it by setting environmental variable `export TAGGING_ENABLED=1`.
+
 
 ### Run locally
 
@@ -85,6 +89,7 @@ You can provide the following ENV variables to customize `arba` execution.
 * `END_DATE` - Last date of performance in the same format as `START_DATE`.
 * `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
 * `GEMINI_API_KEY` - Gemini API key.
+* `TAGGING_ENABLED=0` - Disable processing of texts ads via Gemini.
 
 ### Deploy to Google Cloud
 
@@ -122,6 +127,7 @@ adjust one of the following ENV variables:
 * `END_DATE` - Last date of performance in the same format as `START_DATE`.
 * `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
 * `GEMINI_API_KEY` - Gemini API key.
+* `TAGGING_ENABLED=0` - Disable processing of texts ads via Gemini.
 
 By default `arba` is scheduled to run on midnight UTC.
 You can change the schedule in Cloud Scheduler. Locate `arba-scheduler` and define your own schedule.

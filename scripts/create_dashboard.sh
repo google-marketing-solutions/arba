@@ -47,8 +47,6 @@ link=`cat $(dirname $0)/linking_api.http | sed "s/REPORT_ID/$report_id/; s/REPOR
 
 if [ $return_link -eq 1 ]; then
   echo "Click on the link to create a dashboard\n: $link"
-elif command -v xdg-open &> /dev/null; then
-    xdg-open "$URL" &> /dev/null
 elif command -v open &> /dev/null; then
   open "$link" &> /dev/null
 elif command -v start &> /dev/null; then

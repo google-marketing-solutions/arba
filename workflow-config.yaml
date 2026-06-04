@@ -48,9 +48,18 @@ bq_macro_section: &bq_macros
     macro:
       dataset: *bq_dataset
       target_dataset: *bq_dataset
+      top_n_ad_groups: 10
+      top_n_keywords: 20
 
 
 
+name: arba
+metadata:
+  version: 1.0.0
+  required_fetchers:
+    google-ads: ""
+    media-tagging: ""
+    bq: ""
 steps:
   - alias: googleads
     fetcher: google-ads
@@ -88,10 +97,10 @@ steps:
     queries:
       - folder: queries/bq/input
 
-  - alias: tagging
+  - alias: landing_page_relevance
     fetcher: media-tagging
     queries:
-      - folder: queries/tagging
+      - path: queries/tagging/landing_page_relevance.sql
     writer: bq
     writer_parameters:
       project: *bq_project
@@ -100,15 +109,40 @@ steps:
     fetcher_parameters:
       project: *bq_project
     query_parameters:
-      macro:
+      macro_expansion: False
+      template:
+        input: |
+          gquery:bq:SELECT
+            ad_group_id,
+            url,
+            keywords,
+            ads
+          FROM `{{target_dataset}}.landing_page_relevance_input`;
+        target_dataset: *bq_dataset
+
+  - alias: tagging
+    fetcher: media-tagging
+    queries:
+      - path: queries/tagging/cta.sql
+      - path: queries/tagging/usp.sql
+    writer: bq
+    writer_parameters:
+      project: *bq_project
+      dataset: *bq_dataset
+      write_disposition: append
+    fetcher_parameters:
+      project: *bq_project
+    query_parameters:
+      macro_expansion: False
+      template:
         ads: |
           gquery:bq:SELECT
             DISTINCT ad
-          FROM `{dataset}.rsa_input`
+          FROM `{{target_dataset}}.rsa_input`
           WHERE
-            cost_share < {cost_share}
-            AND ad_position <= {max_results};
-        dataset: *bq_dataset
+            cost_share < {{cost_share}}
+            AND ad_position <= {{max_results}};
+        target_dataset: *bq_dataset
         cost_share: 80
         max_results: 100
 

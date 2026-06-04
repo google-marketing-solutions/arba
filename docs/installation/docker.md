@@ -44,3 +44,4 @@ You can provide the following Environment variables to customize `arba` executio
 * `END_DATE` - Last date of performance in the same format as `START_DATE`.
 * `MIN_COST_SHARE` - Share of text ads needs to be processed by Gemini. From 0 to 100.
 * `GEMINI_API_KEY` - Gemini API key.
+* `TAGGING_ENABLED=0` - Disable processing of texts ads via Gemini.

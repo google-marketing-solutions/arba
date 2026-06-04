@@ -50,8 +50,6 @@ if [ -z "$BQ_PROJECT" ]; then
   BQ_PROJECT=$GOOGLE_CLOUD_PROJECT
 fi
 if [ -z "$TAGGING_ENABLED" ]; then
-  TAGGING_ENABLED=0
-else
   TAGGING_ENABLED=1
 fi
 
@@ -64,38 +62,27 @@ run_bq() {
   else
     local arba_dataset=${dataset}
   fi
-  garf -w $WORKFLOW \
-    --workflow-include googleads \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --source.account=$account \
-    --source.path-to-config=$ADS_CONFIG \
-    --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
-    --output bq \
-    --bq.project=$project --bq.dataset=${arba_dataset}
-
-  cd scripts
-  python landings_score.py --dataset=${arba_dataset} \
-    --log-name=$LOG_NAME --logger-type $LOGGER
-  cd ..
-  garf -w $WORKFLOW \
-    --workflow-include empty_bq,bq_input \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --source.project=$project
-
-  garf -w $WORKFLOW \
-    --workflow-include tagging \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --macro.cost_share=$MIN_COST_SHARE \
-    --output bq \
-    --bq.project=$project --bq.dataset=${arba_dataset} \
-    --source.project=$project
-
-  garf -w $WORKFLOW \
-    --workflow-skip googleads,bq_input,empty_bq,tagging \
-    --logger $LOGGER --log-name $LOG_NAME \
-    --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
-    --source.project=$project
+  if [[ $TAGGING_ENABLED -eq 1 ]]; then
+    grf workflow run -f $WORKFLOW \
+      --logger $LOGGER --log-name $LOG_NAME \
+      --google-ads.account=$account \
+      --google-ads.path-to-config=$ADS_CONFIG \
+      --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
+      --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
+      --template.dataset=${arba_dataset} --template.target_dataset=${arba_dataset} \
+      --bq.project=$project --bq.dataset=${arba_dataset} \
+      --bq.target_dataset=${arba_dataset}
+  else
+    grf workflow run -f $WORKFLOW \
+      --exclude landing_page_relevance,tagging \
+      --logger $LOGGER --log-name $LOG_NAME \
+      --google-ads.account=$account \
+      --google-ads.path-to-config=$ADS_CONFIG \
+      --macro.start_date=$START_DATE --macro.end_date=$END_DATE \
+      --macro.dataset=${arba_dataset} --macro.target_dataset=${arba_dataset} \
+      --template.dataset=${arba_dataset} --template.target_dataset=${arba_dataset} \
+      --bq.project=$project --bq.dataset=${arba_dataset} \
+      --bq.target_dataset=${arba_dataset}
+  fi
 }
 run_bq $ACCOUNT $BQ_PROJECT $BQ_DATASET

@@ -17,14 +17,24 @@
 DROP TABLE IF EXISTS ad_group_extra_info;
 
 CREATE TABLE ad_group_extra_info AS
-WITH LandingPageRelevance AS (
+WITH LandingPageRelevanceInput AS (
   SELECT
     ad_group_id,
     url,
+    ROW_NUMBER() OVER (PARTITION BY ad_group_id ORDER BY MIN(CAST(relevance_score AS INT64))) AS rn,
     MIN(reason) AS relevance_score_reason,
-    MIN(relevance_score) AS relevance_score
+    MIN(CAST(relevance_score AS INT64)) AS relevance_score
   FROM landing_page_relevance
   GROUP BY 1, 2
+),
+LandingPageRelevance AS (
+  SELECT
+    ad_group_id,
+    url,
+    relevance_score_reason,
+    relevance_score
+  FROM LandingPageRelevanceInput
+  WHERE rn <= 1
 ),
 DedupUsp AS (
   SELECT
