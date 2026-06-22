@@ -20,7 +20,7 @@ SELECT
   content.text AS has_usp
 FROM description
 WHERE
-  tagger.custom_prompt = "Assess the following text assets if there's any unique selling point in them."
+  tagging_options.custom_prompt = "Assess the following text assets if there's any unique selling point in them."
   AND media_type = TEXT
   AND tagger_type = "gemini"
   AND media_paths IN (
