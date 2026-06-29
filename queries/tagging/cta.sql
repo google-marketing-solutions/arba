@@ -25,7 +25,7 @@ WHERE
   AND media_type = TEXT
   AND media_paths IN (
     {% for ad in ads -%}
-      {{ ad.ad }}{% if not loop.last %}, {% endif %}
+      "{{ ad.ad }}"{% if not loop.last %}, {% endif %}
     {%- endfor %}
   )
   AND tagging_options.custom_schema = 'boolean'
