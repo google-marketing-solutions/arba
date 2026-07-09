@@ -33,6 +33,10 @@ case $1 in
 		shift
 		report_name=`echo "$1" | tr  " " "_"`
 		;;
+  -r|--report-id)
+		shift
+		report_id=$1
+		;;
 	-h|--help)
 		echo -e $usage;
 		exit
